@@ -236,7 +236,5 @@ $RECYCLE.BIN/
 .idea/misc.xml
 .idea/modules.xml
 .idea/sonarlint/
-CahBot.py
 database.db
-modules/
 program_log.log
