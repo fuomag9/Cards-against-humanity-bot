@@ -19,6 +19,8 @@ bot_path = argparse_args["working_folder"]
 logging_file = argparse_args["logging_file"]
 admin_mode = Utils.str2bool(argparse_args["admin_mode"])
 db_file = argparse_args["database_file"]
+self_file_folder = Path(__file__).resolve().parent
+packs_file = self_file_folder / "packs.pickle"
 
 logging_level = logging.INFO
 if not Utils.str2bool(argparse_args["enable_logging"]):
@@ -28,7 +30,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging_level, filename=logging_file)
 
 utils = Utils(db_file, bot)
-questions = Packs()
+packs = Packs(pack_json=packs_file)
 
 groups_dict = {}  # group chat_id : Game                type inference  ===   dict[str:Game]
 
@@ -286,11 +288,12 @@ dispatcher.add_handler(InlineQueryHandler(inline_caps))
 dispatcher.add_handler(MessageHandler(Filters.command, unknown))
 
 
-
-logging.info("Downloading packs...")
-questions.downloads_packs_data()
-logging.info("Initializing packs database...")
-questions.inizialize_pack_database()
+if packs.is_packs_file_empty():
+    logging.info("Downloading packs...")
+    packs.downloads_packs_data(50)
+else:
+    logging.info("Loading packs...")
+    packs.load_from_pickle()
 
 logging.info('Starting telegram polling thread...')
 updater.start_polling()

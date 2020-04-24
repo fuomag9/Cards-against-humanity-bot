@@ -1,80 +1,79 @@
-from modules.Argparse_args import args as argparse_args
-from modules.Utils import Utils
-import re
+import json
+from pathlib import Path
+import pickle
 
-db_file = argparse_args["database_file"]
-utils = Utils(db_file=db_file)
+import requests
 
+from modules.Pack import Pack
 
-class Packs:
-    def __init__(self):
-        self.packs: dict(dict(dict())) = {}  # packs(pack_name:{calls: [], responses:[]})
+class Packs():
+    def __init__(self, pack_json: Path):
+        self.packs: [Pack] = []
+        self.pack_json = pack_json
 
-    def delete_all_question_tables(self) -> None:
-        packs = self.get_pack_table_names()
-        for pack in packs:
-            utils.drop_table(pack)
+    def is_packs_file_empty(self) -> bool:
+        return not self.pack_json.is_file()
 
-    def get_pack_table_names(self):
-        tables_names = utils.get_all_table_names()
-        packs = []
-        for table in tables_names:
-            if re.search("(_calls)|(_responses)",
-                         table) is not None:  # Todo: check if packs can have _calls or _responses in their name
-                packs.append(table)
+    def delete_all_packs(self) -> bool:
+        if self.pack_json.is_file():
+            try:
+                self.pack_json.unlink()
+            except Exception:
+                return False
+            return True
+        else:
+            return False
 
-    def get_pack_names(self) -> list:
-        return [pack.replace("_calls", "").replace("_responses", "") for pack in self.get_pack_table_names()]
+    def dump_to_pickle(self):
+        with open(self.pack_json,"wb") as file:
+            data = pickle.dumps(self.packs)
+            file.write(data)
 
-    def create_pack_calls_table(self, pack_name) -> None:
-        utils.exec_query(f"""
-        create table {pack_name}_calls
-(
-	call text not null
-);
+    def load_from_pickle(self):
+        with open(self.pack_json,"rb") as file:
+            data = file.read()
+            self.packs = pickle.loads(data)
 
-create unique index pack_name_calls_call_uindex
-	on {pack_name}_calls (call);
-	
-	""")
+    def get_packs_names(self) -> list:
+        return [pack.name for pack in self.packs]
 
-    def create_pack_responses_table(self, pack_name) -> None:
-        utils.exec_query(f"""
-                create table {pack_name}_responses
-        (
-        	response text not null
-        );
+    def downloads_packs_data(self, pages) -> None:
+        if pages > 101:
+            raise ValueError("The page number is too high") #packs after 100*12 might get boring/useless
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:76.0) Gecko/20100101 Firefox/76.0',
+            'Accept': 'application/json, text/plain, */*',
+            'Accept-Language': 'it-IT,it;q=0.8,en-US;q=0.5,en;q=0.3',
+            'Origin': 'https://www.cardcastgame.com',
+            'DNT': '1',
+            'Connection': 'keep-alive',
+            'Cache-Control': 'max-age=0',
+            'TE': 'Trailers',
+        }
+        enumerated_packs = []
+        for x in range(1, pages):
+            params = (
+                ('category', ''),
+                ('direction', 'desc'),
+                ('limit', '12'),
+                ('nsfw', 'true'),
+                ('offset', str(x * 12)),
+                ('sort', 'rating'),
+            )
+            response = requests.get('https://api.cardcastgame.com/v1/decks', headers=headers, params=params)
+            data = json.loads(response.content)['results']['data']
+            del response
+            for d in data:
+                enumerated_packs.append({'code': d['code'], 'name': d['name'], 'is_nsfw': d['has_nsfw_cards']})
 
-        create unique index pack_name_calls_call_uindex
-        	on {pack_name}_responses (response);
+        for pack in enumerated_packs:
+            calls = json.loads(
+                requests.get(f'https://api.cardcastgame.com/v1/decks/{pack["code"]}/calls', headers=headers).content)
+            responses = json.loads(requests.get(f'https://api.cardcastgame.com/v1/decks/{pack["code"]}/responses',
+                                                headers=headers).content)
 
-        	""")
-
-    def fill_pack_calls_data(self, pack_name, data) -> None:
-        for string in data:
-            utils.exec_query(f"""INSERT INTO {pack_name}_calls VALUES ({string})""")
-
-    def fill_pack_responses_data(self, pack_name, data) -> None:
-        for string in data:
-            utils.exec_query(f"""INSERT INTO {pack_name}_responses VALUES ({string})""")
-
-    def inizialize_pack_database(self):
-        """
-        Initialize packs DB and downloads data in it
-        """
-        self.downloads_packs_data()
-        for pack in self.packs:
-            self.create_pack_calls_table(pack)
-            self.fill_pack_calls_data(pack, pack["calls"])
-            self.create_pack_responses_table(pack)
-            self.fill_pack_calls_data(pack, pack["responses"])
-        self.packs = {}
-
-    def get_pack_responses(self, pack_name) -> list:
-        utils.retrieve_query_results(f"SELECT * FROM {pack_name}_responses")
-
-    def get_pack_calls(self, pack_name) -> list:
-        utils.retrieve_query_results(f"SELECT * FROM {pack_name}_calls")
-
-    def downloads_packs_data(self) -> None:
-        pass  # Todo:implement data downloading
+            calls_list = [x['text'] for x in calls]
+            responses_list = [x['text'] for x in responses]
+            del calls, responses
+            p: Pack = Pack(name=pack['name'], calls=calls_list, responses=responses_list, is_nsfw=pack['is_nsfw'])
+            self.packs.append(p)
