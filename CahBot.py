@@ -193,7 +193,6 @@ def set_packs_callback(update, context) -> None:
             packs_keyboard.append([InlineKeyboardButton(pack_name, callback_data=f'{pack_name[:60]}_ppp')])
 
     packs_keyboard.append([InlineKeyboardButton(">>>", callback_data=f'>>>_next_pack_page')])
-    packs_keyboard.append([InlineKeyboardButton("Finish", callback_data=f'finished_adding_packs')])
     reply_markup = InlineKeyboardMarkup(packs_keyboard)
     query.edit_message_text(text=query.message.text, reply_markup=reply_markup)
 
