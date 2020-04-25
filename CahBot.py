@@ -8,6 +8,7 @@ from modules.Game import Game
 from modules.User import User
 from modules.Utils import Utils
 from modules.PacksInit import PacksInit
+from pathlib import Path
 
 updater = Updater(token=argparse_args["key"], use_context=True)
 dispatcher = updater.dispatcher
