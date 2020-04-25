@@ -59,7 +59,7 @@ def new_game(update, context) -> None:
         group_game.is_started = False
         groups_dict[chatid] = group_game
         utils.send_message(chatid,
-                           f"Game started! Use /join to enter the game and /set_packs to chose your packs")
+                           f"Game started! Use /join to enter the game and /set_packs to chose your packs and /start_game to start it!")
     else:
         utils.send_message(chatid, "A game is already in progress!")
         # Todo: eventually implement game timer and stopping
@@ -91,6 +91,7 @@ def start_game(update, context) -> None:
             utils.send_message(chatid, "Game started!")
             game.new_round()
             utils.send_message(chatid,f"{game.judge.username} is asking:\n{game.round.call.get_formatted_call()}")
+            bot.delete_message(chatid,game.pack_selection_ui.message_selection_id)
             groups_dict[chatid] = game
 
 
@@ -188,6 +189,9 @@ def set_packs_callback(update, context) -> None:
         game.pack_selection_ui.pack_names.append(selected_pack)
     else:
         game.pack_selection_ui.pack_names.remove(selected_pack)
+
+    game.pack_selection_ui.message_selection_id = query.message.message_id
+    groups_dict[chatid] = game
 
     min_index = game.pack_selection_ui.page_index * game.pack_selection_ui.items_per_page
     max_index = min_index + game.pack_selection_ui.items_per_page
