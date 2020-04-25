@@ -290,6 +290,8 @@ dispatcher.add_handler(MessageHandler(Filters.command, unknown))
 if packs.is_packs_file_empty():
     logging.info(f"Downloading {50*12} packs, this may take a while...")
     packs.downloads_packs_data(50)
+    logging.info(f"Saving packs to {packs_file}...")
+    packs.dump_to_pickle()
 else:
     logging.info("Packs found, loading them...")
     packs.load_from_pickle()
