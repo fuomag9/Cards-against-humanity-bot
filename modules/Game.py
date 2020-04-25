@@ -7,10 +7,11 @@ from modules.Call import Call
 from modules.MultiPack import MultiPack
 from modules.Round import Round
 from modules.User import User
+from modules.PackSelectionUI import PackSelectionUI
 
 
 class Game:
-    def __init__(self, chat_id, packlist: MultiPack, initiated_by: User = None, rounds: int = 30,
+    def __init__(self, chat_id, packlist: MultiPack = None, initiated_by: User = None, rounds: int = 30,
                  max_responses_per_user=8):
         """
 
@@ -25,23 +26,24 @@ class Game:
         self.chat_id = chat_id
         self.users: List[User] = []
         self.initiated_by: User = initiated_by
-        self.packlist: MultiPack = packlist
+        self.multipack: (MultiPack, None) = packlist
         self.rounds: int = rounds
         self.round: (Round, None) = None
         self.judge_index = 0
         self.judge: User = initiated_by
         self.max_responses_per_user: int = max_responses_per_user
+        self.pack_selection_ui = PackSelectionUI()
 
     def get_random_call(self) -> Call:
         # Todo: handle when calls are 0
-        chosen_call = random.choice(self.packlist.calls)
-        self.packlist.calls.remove(chosen_call)
+        chosen_call = random.choice(self.multipack.calls)
+        self.multipack.calls.remove(chosen_call)
         return chosen_call
 
     def get_random_response(self):
         # Todo: handle when responses are 0
-        chosen_response = random.choice(self.packlist.responses)
-        self.packlist.responses.remove(chosen_response)
+        chosen_response = random.choice(self.multipack.responses)
+        self.multipack.responses.remove(chosen_response)
         return chosen_response
 
     @multimethod
@@ -86,11 +88,17 @@ class Game:
         for _ in range(0, number_of_responses_needed):
             user.responses.append(self.get_random_response())
 
-    def scoreboard(self) -> List:
+    def scoreboard(self) -> List[User]:
         """
         Return ordered list of Users by score (max -> min)
         """
         return sorted(self.users, key=lambda x: x.score, reverse=True)
+
+    def get_formatted_scoreboard(self) -> str:
+        string_status = ""
+        for username, score in [(u.username, u.score) for u in self.scoreboard()]:
+            string_status += f"{username}: {score} points\n"
+        return string_status
 
     def new_round(self) -> bool:
         if self.rounds == 0:

@@ -38,6 +38,16 @@ class PacksInit():
     def get_packs_names(self) -> list:
         return [pack.name for pack in self.packs]
 
+    def get_pack_by_name(self, pack_name : str) -> Pack:
+        for pack in self.packs:
+            if pack.name == pack_name:
+                return pack
+
+    def get_pack_by_truncatedstr_name(self, pack_name : str, truncated_length : int = 60) -> Pack:
+        for pack in self.packs:
+            if pack.name[:truncated_length] == pack_name:
+                return pack #Todo: eventually check for duplicates pack, but may not be an issue
+
     def downloads_packs_data(self, pages) -> None:
         if pages > 101:
             raise ValueError("The page number is too high") #packs after 100*12 might get boring/useless
