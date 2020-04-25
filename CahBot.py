@@ -247,20 +247,19 @@ def handle_response_by_user(update, context):
         if message_text not in user.responses:
             return
         if not user.has_answered:
-            user.responses = message_text
-            if game.round.call_completitions_spaces > 1:
-                utils.send_message(game.chat_id, f"{user.username} answered {user.completition_answers} of {game.round.call_completitions_spaces}")
+            if game.round.call.replacements > 1:
+                utils.send_message(game.chat_id, f"{user.username} answered {user.completition_answers+1} of {game.round.call.replacements}")
             user.completition_answers += 1
-            if user.completition_answers == game.round.call_completitions_spaces:
-                utils.send_message(game.chat_id, f"{user.username} has answered!")
+            if user.completition_answers == game.round.call.replacements:
+                utils.send_message(game.chat_id, f"{user.username} has finished answering!")
+                user.has_answered = True
 
             if game.have_all_users_answered():
                 game.round.is_judging_mode = True
                 game.round.is_answering_mode = False
                 #Todo : send message with callback for judge and write the fucking UI and stuff -> the game.rounds -1 == 0 needs to be handled there
 
-            index = game.users.index(user)
-            game.users[index] = user
+            game.replace_user(user=user)
             groups_dict[chatid] = game
 
 

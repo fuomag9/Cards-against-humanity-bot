@@ -1,17 +1,12 @@
+import random
 from typing import List
 
-from modules.Argparse_args import args as argparse_args
-from modules.Call import Call
-from modules.User import User
-from modules.Utils import Utils
-from modules.Round import Round
-from modules.Pack import Pack
-from modules.PackList import PackList
 from multimethod import multimethod
-import random
 
-db_file = argparse_args["database_file"]
-utils = Utils(db_file=db_file)
+from modules.Call import Call
+from modules.PackList import PackList
+from modules.Round import Round
+from modules.User import User
 
 
 class Game:
@@ -68,6 +63,10 @@ class Game:
     def remove_user(self, user: User):
         self.users.remove(user)
 
+    def replace_user(self, user: User):
+        index = self.users.index(user)
+        self.users[index] = user
+
     @multimethod
     def get_user(self, username) -> (User, None):
         for user in self.users:
@@ -101,6 +100,7 @@ class Game:
             # assumo chosen_call.replacements < self.max_responses_per_user
             for user in self.users:
                 self.fill_user_responses(user)
+                user.has_answered = False
             self.round = Round(chosen_call)
             self.rounds -= 1
             return True
