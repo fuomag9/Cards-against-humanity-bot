@@ -4,13 +4,13 @@ from typing import List
 from multimethod import multimethod
 
 from modules.Call import Call
-from modules.PackList import PackList
+from modules.MultiPack import MultiPack
 from modules.Round import Round
 from modules.User import User
 
 
 class Game:
-    def __init__(self, chat_id, packlist: PackList, initiated_by: User = None, rounds: int = 30,
+    def __init__(self, chat_id, packlist: MultiPack, initiated_by: User = None, rounds: int = 30,
                  max_responses_per_user=8):
         """
 
@@ -25,7 +25,7 @@ class Game:
         self.chat_id = chat_id
         self.users: List[User] = []
         self.initiated_by: User = initiated_by
-        self.packlist: PackList = packlist
+        self.packlist: MultiPack = packlist
         self.rounds: int = rounds
         self.round: (Round, None) = None
         self.judge_index = 0

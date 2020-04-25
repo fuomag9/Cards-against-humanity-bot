@@ -3,7 +3,7 @@ from typing import List
 from modules.Pack import Pack
 
 
-class PackList(Pack):
+class MultiPack(Pack):
     def __init__(self, packs_list: List[Pack]):
         c_p = []
         r_p = []
@@ -13,3 +13,4 @@ class PackList(Pack):
             for response in pack.responses:
                 r_p.append(response)
         super().__init__(None, c_p, r_p)
+        del self.name
