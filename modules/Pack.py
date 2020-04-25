@@ -1,11 +1,14 @@
 import random
+from typing import List
+
+from modules.Call import Call
 
 
 class Pack:
-    def __init__(self, name, calls, responses, is_nsfw=False):
+    def __init__(self, name: (str, None), calls: List[Call], responses: List, is_nsfw=False):
         self.name: str = name
-        self.calls: [] = calls
-        self.responses: [] = responses
+        self.calls: List[Call] = calls
+        self.responses: List = responses
         self.is_nsfw: bool = is_nsfw
 
     @property
@@ -13,12 +16,11 @@ class Pack:
         return len(self.calls)
 
     @property
-    def answers_count(self):
+    def response_count(self):
         return len(self.responses)
 
     def get_random_response(self):
         return random.choice(self.responses)
 
-    def get_random_call(self) -> dict:
-        chosen_call = random.choice(self.calls)
-        return {"call": chosen_call, "replacements": len(chosen_call) - 1}
+    def get_random_call(self) -> Call:
+        return random.choice(self.calls)

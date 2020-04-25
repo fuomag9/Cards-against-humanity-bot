@@ -1,0 +1,3 @@
+multimethod
+requests
+python-telegram-bot

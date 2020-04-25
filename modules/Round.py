@@ -1,11 +1,8 @@
-from typing import List
-
-from modules.User import User
+from modules.Call import Call
 
 
 class Round:
-    def __init__(self, call: str, call_completitions_spaces: int):
+    def __init__(self, call: Call):
         self.is_answering_mode = False
         self.is_judging_mode = False
-        self.call = call
-        self.call_completitions_spaces = call_completitions_spaces
+        self.call: Call = call

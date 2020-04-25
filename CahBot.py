@@ -7,7 +7,7 @@ from modules.Argparse_args import args as argparse_args
 from modules.Game import Game
 from modules.User import User
 from modules.Utils import Utils
-from modules.Packs import Packs
+from modules.PacksInit import PacksInit
 
 updater = Updater(token=argparse_args["key"], use_context=True)
 dispatcher = updater.dispatcher
@@ -30,7 +30,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging_level, filename=logging_file)
 
 utils = Utils(db_file, bot)
-packs = Packs(pack_json=packs_file)
+packs = PacksInit(pack_json=packs_file)
 
 groups_dict = {}  # group chat_id : Game                type inference  ===   dict[str:Game]
 
@@ -205,25 +205,24 @@ def inline_caps(update, context):
     if not query:
         return
 
-    # Todo: eventually implement data in DB if search becomes too slow
+    # Todo: eventually implement this in another way if search becomes too slow
     for searched_game in list(groups_dict.values()):
-        for searched_user in searched_game.users:
-            if searched_user.username == username:
-                inline_user: User = searched_user
-                game: Game = searched_game
+        inline_user: User = searched_game.get_user(username)
+        if inline_user is not None:
+            game: Game = searched_game
+            break
 
     if inline_user is None or game is None:
-        return  # Todo eventually display no game in progress status
+        return  # Todo eventually display no game in progress status or user not in game or something similar
     elif game.is_started is False:
         return  # Todo eventually display game still in join mode status
 
-    gay = ["cacca", "pene", "urina"]
 
     results = [InlineQueryResultArticle(
         id=f"{User.username}:{response}",
         title=response,
         input_message_content=InputTextMessageContent(response)
-    ) for response in gay]  # inline_user.responses
+    ) for response in inline_user.responses]
 
     context.bot.answer_inline_query(update.inline_query.id, results)
 
@@ -240,7 +239,7 @@ def handle_response_by_user(update, context):
     game : Game = groups_dict[chatid]
     if game.ignore_messages:
         return
-    if not game.is_user_present(User(username)):
+    if not game.is_user_present(username):  #Todo: this could technically be coupled with the statement below to save time
         return
     else:
         user: User = game.get_user(username)
@@ -248,7 +247,7 @@ def handle_response_by_user(update, context):
         if message_text not in user.responses:
             return
         if not user.has_answered:
-            user.answer = message_text
+            user.responses = message_text
             if game.round.call_completitions_spaces > 1:
                 utils.send_message(game.chat_id, f"{user.username} answered {user.completition_answers} of {game.round.call_completitions_spaces}")
             user.completition_answers += 1
@@ -289,10 +288,10 @@ dispatcher.add_handler(MessageHandler(Filters.command, unknown))
 
 
 if packs.is_packs_file_empty():
-    logging.info("Downloading packs...")
+    logging.info(f"Downloading {50*12} packs, this may take a while...")
     packs.downloads_packs_data(50)
 else:
-    logging.info("Loading packs...")
+    logging.info("Packs found, loading them...")
     packs.load_from_pickle()
 
 logging.info('Starting telegram polling thread...')

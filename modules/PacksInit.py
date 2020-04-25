@@ -5,11 +5,12 @@ import pickle
 import requests
 
 from modules.Pack import Pack
+from modules.Call import Call
 
-class Packs():
+class PacksInit():
     def __init__(self, pack_json: Path):
-        self.packs: [Pack] = []
-        self.pack_json = pack_json
+        self.packs: List[Pack] = []
+        self.pack_json : Path = pack_json
 
     def is_packs_file_empty(self) -> bool:
         return not self.pack_json.is_file()
@@ -67,13 +68,13 @@ class Packs():
                 enumerated_packs.append({'code': d['code'], 'name': d['name'], 'is_nsfw': d['has_nsfw_cards']})
 
         for pack in enumerated_packs:
-            calls = json.loads(
+            calls_json = json.loads(
                 requests.get(f'https://api.cardcastgame.com/v1/decks/{pack["code"]}/calls', headers=headers).content)
-            responses = json.loads(requests.get(f'https://api.cardcastgame.com/v1/decks/{pack["code"]}/responses',
+            responses_json = json.loads(requests.get(f'https://api.cardcastgame.com/v1/decks/{pack["code"]}/responses',
                                                 headers=headers).content)
 
-            calls_list = [x['text'] for x in calls]
-            responses_list = [x['text'] for x in responses]
-            del calls, responses
+            calls_list : List[Call] = [Call(call=x['text'],replacements=len(x['text'])-1) for x in calls_json]
+            responses_list = [x['text'] for x in responses_json]
+            del calls_json, responses_json
             p: Pack = Pack(name=pack['name'], calls=calls_list, responses=responses_list, is_nsfw=pack['is_nsfw'])
             self.packs.append(p)
