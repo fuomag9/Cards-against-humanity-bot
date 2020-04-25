@@ -1,7 +1,9 @@
 import logging
 
-from telegram import InlineQueryResultArticle, InputTextMessageContent
-from telegram.ext import CommandHandler, Updater, InlineQueryHandler, MessageHandler, Filters, ConversationHandler, CallbackQueryHandler
+from telegram import InlineQueryResultArticle, InputTextMessageContent, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import CommandHandler, Updater, InlineQueryHandler, MessageHandler, Filters, ConversationHandler, \
+    CallbackQueryHandler
+import telegram
 
 from modules.Argparse_args import args as argparse_args
 from modules.Game import Game
@@ -74,13 +76,17 @@ def start_game(update, context) -> None:
     else:
         game: Game = groups_dict[chatid]
         if game.is_started:
-            utils.send_message(chatid,"You can't start a game that's already started!")
+            utils.send_message(chatid, "You can't start a game that's already started!")
         elif game.multipack is None:
-            utils.send_message(chatid,"You can't start a game with no pack selected!")
+            utils.send_message(chatid, "You can't start a game with no pack selected!")
         else:
             game.is_started = True
-            groups_dict[chatid] = game
+            list_of_packs = [packs.get_pack_by_truncatedstr_name(pack_name=pack_name) for pack_name in
+                             game.pack_selection_ui.pack_names]
+            game.multipack = MultiPack(list_of_packs)
             utils.send_message(chatid, "Game started!")
+            game.new_round()
+            groups_dict[chatid] = game
 
 
 def actually_end_game(chatid) -> None:
@@ -128,7 +134,8 @@ def join(update, context) -> None:
     else:
         utils.send_message(chatid, "There is no game running! Start one with /new_game")
 
-def set_packs(update,context) -> None:
+
+def set_packs(update, context) -> None:
     chatid = update.message.chat_id
     username = update.message.from_user.username
     chat_type = update.message.chat.type
@@ -139,12 +146,12 @@ def set_packs(update,context) -> None:
         game: Game = groups_dict[chatid]
 
     if game.is_started:
-        utils.send_message(chatid,"You cannot chose packs after a game has started!")
+        utils.send_message(chatid, "You cannot chose packs after a game has started!")
         return
 
     min_index = game.pack_selection_ui.page_index * game.pack_selection_ui.items_per_page
     max_index = min_index + game.pack_selection_ui.items_per_page
-    packs_to_use_in_keyboard = packs.get_packs_names()[min_index:max_index]
+    packs_to_use_in_keyboard: List[str] = packs.get_packs_names()[min_index:max_index]
     packs_keyboard = []
     for pack_name in packs_to_use_in_keyboard:
         if pack_name in game.pack_selection_ui.pack_names:
@@ -153,17 +160,15 @@ def set_packs(update,context) -> None:
             packs_keyboard.append([InlineKeyboardButton(pack_name, callback_data=f'{pack_name[:60]}_ppp')])
 
     packs_keyboard.append([InlineKeyboardButton(">>>", callback_data=f'>>>_next_pack_page')])
-    packs_keyboard.append([InlineKeyboardButton("Finish", callback_data=f'finished_adding_packs')])
     reply_markup = InlineKeyboardMarkup(packs_keyboard)
 
-    utils.send_message(chatid,"Click on the packs you'd like to use", markup=reply_markup, html= True)
+    utils.send_message(chatid, "Click on the packs you'd like to use:", markup=reply_markup, html=True)
 
 
 def set_packs_callback(update, context) -> None:
-    chatid = update.message.chat_id
-    username = update.message.from_user.username
-    chat_type = update.message.chat.type
     query: str = update.callback_query
+    chatid = query.message.chat.id
+    chat_type = query.message.chat.type
 
     if not chat_type.endswith("group"):
         return
@@ -171,44 +176,44 @@ def set_packs_callback(update, context) -> None:
         return
     game: Game = groups_dict[chatid]
 
-    selected_pack = query[:60]
+    selected_pack = query.data.replace("_ppp","")
     if selected_pack not in game.pack_selection_ui.pack_names:
         game.pack_selection_ui.pack_names.append(selected_pack)
+    else:
+        game.pack_selection_ui.pack_names.remove(selected_pack)
 
     min_index = game.pack_selection_ui.page_index * game.pack_selection_ui.items_per_page
     max_index = min_index + game.pack_selection_ui.items_per_page
-    packs_to_use_in_keyboard = packs.get_packs_names()[min_index:max_index]
+    packs_to_use_in_keyboard: List[str] = packs.get_packs_names()[min_index:max_index]
     packs_keyboard = []
     for pack_name in packs_to_use_in_keyboard:
         if pack_name in game.pack_selection_ui.pack_names:
-            packs_keyboard.append([InlineKeyboardButton(f"<b>{pack_name}</b>", callback_data=f'{pack_name[:60]}_ppp')])
+            packs_keyboard.append([InlineKeyboardButton(f"{pack_name} ✔", callback_data=f'{pack_name[:60]}_ppp')])
         else:
             packs_keyboard.append([InlineKeyboardButton(pack_name, callback_data=f'{pack_name[:60]}_ppp')])
 
     packs_keyboard.append([InlineKeyboardButton(">>>", callback_data=f'>>>_next_pack_page')])
     packs_keyboard.append([InlineKeyboardButton("Finish", callback_data=f'finished_adding_packs')])
     reply_markup = InlineKeyboardMarkup(packs_keyboard)
-    query.edit_message_text(reply_markup=reply_markup)
-
+    query.edit_message_text(text=query.message.text, reply_markup=reply_markup)
 
 
 def update_set_packs_keyboard_callback(update, context) -> None:
-    chatid = update.message.chat_id
-    username = update.message.from_user.username
-    chat_type = update.message.chat.type
     query: str = update.callback_query
+    chatid = query.message.chat.id
+    chat_type = query.message.chat.type
 
     if not chat_type.endswith("group"):
         return
     if not chatid in groups_dict.keys():
         return
     game: Game = groups_dict[chatid]
-    game.pack_selection_ui.page_index+=1
+    game.pack_selection_ui.page_index += 1
     groups_dict[chatid] = game
 
     min_index = game.pack_selection_ui.page_index * game.pack_selection_ui.items_per_page
     max_index = min_index + game.pack_selection_ui.items_per_page
-    packs_to_use_in_keyboard = packs.get_packs_names()[min_index:max_index]
+    packs_to_use_in_keyboard: List[str] = packs.get_packs_names()[min_index:max_index]
     packs_keyboard = []
     for pack_name in packs_to_use_in_keyboard:
         if pack_name in game.pack_selection_ui.pack_names:
@@ -217,27 +222,8 @@ def update_set_packs_keyboard_callback(update, context) -> None:
             packs_keyboard.append([InlineKeyboardButton(pack_name, callback_data=f'{pack_name[:60]}_ppp')])
 
     packs_keyboard.append([InlineKeyboardButton(">>>", callback_data=f'>>>_next_pack_page')])
-    packs_keyboard.append([InlineKeyboardButton("Finish", callback_data=f'finished_adding_packs')])
     reply_markup = InlineKeyboardMarkup(packs_keyboard)
-    query.edit_message_text(reply_markup=reply_markup)
-
-
-def finished_adding_packs_callback(update, context) -> None:
-    chatid = update.message.chat_id
-    username = update.message.from_user.username
-    chat_type = update.message.chat.type
-    query: str = update.callback_query
-
-    if not chat_type.endswith("group"):
-        return
-    if not chatid in groups_dict.keys():
-        return
-    game: Game = groups_dict[chatid]
-
-    list_of_packs = [PacksInit.get_pack_by_truncatedstr_name(pack_name) for pack_name in game.pack_selection_ui.pack_names]
-    game.multipack = MultiPack(list_of_packs)
-    groups_dict[chatid] = game
-
+    query.edit_message_text(text=query.message.text, reply_markup=reply_markup)
 
 
 def leave(update, context) -> None:
@@ -305,11 +291,6 @@ def on(update, context) -> None:
         utils.send_message(chatid, "Cannot turn listening on if there are no games running!")
 
 
-def set_packs(update, context) -> None:
-    pass
-    # Todo: setup packs
-
-
 def inline_caps(update, context):
     query = update.inline_query.query
     username = update.inline_query.from_user.username
@@ -329,8 +310,7 @@ def inline_caps(update, context):
     elif game.is_started is False:
         return  # Todo eventually display game still in join mode status
     elif game.judge == inline_user:
-        return #Todo handle judge who should not answer
-
+        return  # Todo handle judge who should not answer
 
     results = [InlineQueryResultArticle(
         id=f"{User.username}:{response}",
@@ -350,10 +330,11 @@ def handle_response_by_user(update, context):
         return
     if not chatid in groups_dict.keys():
         return
-    game : Game = groups_dict[chatid]
+    game: Game = groups_dict[chatid]
     if game.ignore_messages:
         return
-    if not game.is_user_present(username):  #Todo: this could technically be coupled with the statement below to save time
+    if not game.is_user_present(
+            username):  # Todo: this could technically be coupled with the statement below to save time
         return
     else:
         user: User = game.get_user(username)
@@ -362,64 +343,55 @@ def handle_response_by_user(update, context):
             return
         if not user.has_answered:
             if game.round.call.replacements > 1:
-                utils.send_message(game.chat_id, f"{user.username} answered {user.completition_answers+1} of {game.round.call.replacements}")
+                utils.send_message(game.chat_id,
+                                   f"{user.username} answered {user.completition_answers + 1} of {game.round.call.replacements}")
             user.completition_answers += 1
             if user.completition_answers == game.round.call.replacements:
                 utils.send_message(game.chat_id, f"{user.username} has finished answering!")
                 user.has_answered = True
 
             if game.have_all_users_answered():
-                #todo: handle if an user quitted
+                # todo: handle if an user quitted
                 game.round.is_judging_mode = True
                 game.round.is_answering_mode = False
 
                 buttons_list = []
                 for user in game.users:
                     user_answer_formatted = f"{user.username}: {','.join(game.round.get_user_answers(user))}"
-                    buttons_list.append([InlineKeyboardButton(user_answer_formatted, callback_data=f'{user.username}_rcw')])
+                    buttons_list.append(
+                        [InlineKeyboardButton(user_answer_formatted, callback_data=f'{user.username}_rcw')])
 
                 message_markup = InlineKeyboardMarkup(buttons_list)
-                utils.send_message(game.chat_id,f"Everyone has answered!\n{game.judge.username} you need to chose the winner",markup=message_markup) #Todo: implement @ at user
-                #Todo : -> the game.rounds -1 == 0 needs to be handled there
+                utils.send_message(game.chat_id,
+                                   f"Everyone has answered!\n{game.judge.username} you need to chose the best answer",
+                                   markup=message_markup)  # Todo: implement @ at user
 
             game.replace_user(user=user)
             groups_dict[chatid] = game
 
+
 def handle_response_chose_winner_callback(update, context):
-    chatid = update.message.chat_id
-    username = update.message.from_user.username
-    chat_type = update.message.chat.type
-    query : str = update.callback_query
+    query: str = update.callback_query
+    chat_type = query.message.chat.type
+    chatid = query.message.chat.id
 
     if not chat_type.endswith("group"):
         return
     if not chatid in groups_dict.keys():
         return
-    game : Game = groups_dict[chatid]
-    who_submitted_the_response : User = game.get_user(query.split("_rcw")[0])
+    game: Game = groups_dict[chatid]
+    who_submitted_the_response: User = game.get_user(query.split("_rcw")[0])
     if not game.is_user_present(judge):
-        return #todo: handle if judge quitted
-    #Todo: handle if callback refers to current game and not an old one (dumb users being dumb)
+        return  # todo: handle if judge quitted
+    # Todo: handle if callback refers to current game and not an old one (dumb users being dumb)
 
     query.edit_message_text(text=f"<b>{who_submitted_the_response}</b> won!")
-    utils.send_message(chatid,f"{who_submitted_the_response} won!") #Todo: superfluo?
+    utils.send_message(chatid, f"{who_submitted_the_response} won!")  # Todo: superfluo?
 
-    game.rounds -= 1
-
-    if game.rounds == 0:
-        scoreboard_formatted = '\n'.join(game.scoreboard())
-        utils.send_message(chatid,f"Game ended! {game.scoreboard()[0].username} won!\nHere are all the scores:\n{scoreboard_formatted}")
+    if not game.new_round():
         actually_end_game(chatid)
     else:
         groups_dict[chatid] = game
-
-
-
-
-
-
-
-
 
 
 def unknown(update, context):
@@ -439,14 +411,13 @@ dispatcher.add_handler(CommandHandler(('set_packs'), set_packs))
 
 dispatcher.add_handler(CallbackQueryHandler(handle_response_chose_winner_callback, pattern='_rcw'))
 dispatcher.add_handler(CallbackQueryHandler(update_set_packs_keyboard_callback, pattern='>>>_next_pack_page'))
-dispatcher.add_handler(CallbackQueryHandler(finished_adding_packs_callback, pattern='finished_adding_packs'))
+dispatcher.add_handler(CallbackQueryHandler(set_packs_callback, pattern='_ppp'))
 
 dispatcher.add_handler(InlineQueryHandler(inline_caps))
 dispatcher.add_handler(MessageHandler(Filters.command, unknown))
 
-
 if packs.is_packs_file_empty():
-    logging.info(f"Downloading {50*12} packs, this may take a while...")
+    logging.info(f"Downloading {50 * 12} packs, this may take a while...")
     packs.downloads_packs_data(50)
     logging.info(f"Saving packs to {packs_file}...")
     packs.dump_to_pickle()

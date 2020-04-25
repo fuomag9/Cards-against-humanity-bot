@@ -109,6 +109,7 @@ class Game:
             for user in self.users:
                 self.fill_user_responses(user)
                 user.has_answered = False
+            self.next_judge()
             self.round = Round(chosen_call)
             self.rounds -= 1
             return True
