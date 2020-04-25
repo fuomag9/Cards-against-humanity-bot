@@ -114,7 +114,7 @@ class Game:
             return True
 
     def have_all_users_answered(self):
-        return all(user.has_answered is True for user in self.users)
+        return all(user.has_answered is True for user in list(filter(lambda x: x != self.judge, self.users)))
 
     def next_judge(self):
         if self.judge_index + 1 > len(self.users) - 1:

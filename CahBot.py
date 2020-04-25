@@ -328,6 +328,8 @@ def inline_caps(update, context):
         return  # Todo eventually display no game in progress status or user not in game or something similar
     elif game.is_started is False:
         return  # Todo eventually display game still in join mode status
+    elif game.judge == inline_user:
+        return #Todo handle judge who should not answer
 
 
     results = [InlineQueryResultArticle(
