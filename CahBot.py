@@ -258,7 +258,15 @@ def handle_response_by_user(update, context):
             if game.have_all_users_answered():
                 game.round.is_judging_mode = True
                 game.round.is_answering_mode = False
-                #Todo : send message with callback for judge and write the fucking UI and stuff -> the game.rounds -1 == 0 needs to be handled there
+
+                buttons_list = []
+                for user in game.users:
+                    user_answer_formatted = ",".join(game.round.get_user_answers(user))
+                    buttons_list.append([InlineKeyboardButton(user_answer_formatted, callback_data=f'{user.username}_response_chose_winner')])
+
+                message_markup = InlineKeyboardMarkup(buttons_list)
+                utils.send_message(f"Everyone has answered!\n{game.judge.username} you need to chose the winner",markup=message_markup) #Todo: implement @ at user
+                #Todo : -> the game.rounds -1 == 0 needs to be handled there
 
             game.replace_user(user=user)
             groups_dict[chatid] = game
