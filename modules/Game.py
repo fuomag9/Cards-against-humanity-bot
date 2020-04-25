@@ -22,7 +22,6 @@ class Game:
         """
         self.is_started = None
 
-        self.ignore_messages = False  # ignore messages sent from the group chat
         self.chat_id = chat_id
         self.users: List[User] = []
         self.initiated_by: User = initiated_by

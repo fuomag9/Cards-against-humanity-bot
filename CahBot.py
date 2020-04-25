@@ -263,34 +263,6 @@ def status(update, context) -> None:
         utils.send_message(chatid, "There is no game running! Start one with /new_game")
 
 
-def off(update, context) -> None:
-    chatid = update.message.chat_id
-    username = update.message.from_user.username
-    chat_type = update.message.chat.type
-    if not chat_type.endswith("group"):
-        utils.send_message(chatid, "You can only turn listening off in a group!")
-    elif chatid in groups_dict.keys():
-        game: Game = groups_dict[chatid]
-        game.ignore_messages = True
-        groups_dict[chatid] = group_game
-    else:
-        utils.send_message(chatid, "Cannot turn listening off if there are no games running!")
-
-
-def on(update, context) -> None:
-    chatid = update.message.chat_id
-    username = update.message.from_user.username
-    chat_type = update.message.chat.type
-    if not chat_type.endswith("group"):
-        utils.send_message(chatid, "You can only turn listening on in a group!")
-    elif chatid in groups_dict.keys():
-        game: Game = groups_dict[chatid]
-        game.ignore_messages = False
-        groups_dict[chatid] = group_game
-    else:
-        utils.send_message(chatid, "Cannot turn listening on if there are no games running!")
-
-
 def inline_caps(update, context):
     query = update.inline_query.query
     username = update.inline_query.from_user.username
@@ -331,8 +303,6 @@ def handle_response_by_user(update, context):
     if not chatid in groups_dict.keys():
         return
     game: Game = groups_dict[chatid]
-    if game.ignore_messages:
-        return
     if not game.is_user_present(
             username):  # Todo: this could technically be coupled with the statement below to save time
         return
@@ -405,8 +375,6 @@ dispatcher.add_handler(CommandHandler(('start_game'), start_game))
 dispatcher.add_handler(CommandHandler(('join'), join))
 dispatcher.add_handler(CommandHandler(('leave'), leave))
 dispatcher.add_handler(CommandHandler(('status'), status))
-dispatcher.add_handler(CommandHandler(('off'), off))
-dispatcher.add_handler(CommandHandler(('on'), on))
 dispatcher.add_handler(CommandHandler(('set_packs'), set_packs))
 
 dispatcher.add_handler(CallbackQueryHandler(handle_response_chose_winner_callback, pattern='_rcw'))
