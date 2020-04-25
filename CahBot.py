@@ -77,12 +77,13 @@ def start_game(update, context) -> None:
         game: Game = groups_dict[chatid]
         if game.is_started:
             utils.send_message(chatid, "You can't start a game that's already started!")
-        elif game.multipack is None:
-            utils.send_message(chatid, "You can't start a game with no pack selected!")
         else:
-            game.is_started = True
             list_of_packs = [packs.get_pack_by_truncatedstr_name(pack_name=pack_name) for pack_name in
                              game.pack_selection_ui.pack_names]
+            if list_of_packs is []:
+                utils.send_message(chatid, "You can't start a game with no pack selected!")
+                return
+            game.is_started = True
             game.multipack = MultiPack(list_of_packs)
             utils.send_message(chatid, "Game started!")
             game.new_round()

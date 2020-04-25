@@ -10,7 +10,7 @@ utils = Utils(db_file=db_file)
 
 class User:
     def __init__(self, username: str):
-        self.responses: (List[str], None) = None
+        self.responses: List[str] = []
         self.last_response_date: (datetime, None) = None
         self.username = username
         self.has_answered = False
