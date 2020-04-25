@@ -49,14 +49,15 @@ class Game:
     def is_user_present(self, user: User):
         if self.users is None:
             return False
-        return self.get_user(user) is not None
+
+        return self.get_user(user.username) is not None
 
     @multimethod
     def is_user_present(self, username: str):
         if self.users is None:
             return False
-        hypotetical_user = User(username)
-        return self.get_user(hypotetical_user) is not None
+
+        return self.get_user(username) is not None
 
     def add_user(self, user: User):
         self.users.append(user)
@@ -76,9 +77,9 @@ class Game:
         return None
 
     @get_user.register
-    def get_user(self, searched_user) -> (User, None):
+    def get_user(self, searched_user : str) -> (User, None):
         for user in self.users:
-            if searched_user.username == user.username:
+            if searched_user == user.username:
                 return user
         return None
 

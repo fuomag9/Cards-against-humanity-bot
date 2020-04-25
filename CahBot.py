@@ -83,10 +83,14 @@ def start_game(update, context) -> None:
             if list_of_packs is []:
                 utils.send_message(chatid, "You can't start a game with no pack selected!")
                 return
+            elif len(game.users) == 1:
+                utils.send_message(chatid, "You need at least 2 people to play a game!")
+                return
             game.is_started = True
             game.multipack = MultiPack(list_of_packs)
             utils.send_message(chatid, "Game started!")
             game.new_round()
+            utils.send_message(chatid,f"{game.judge.username} is asking:\n{game.round.call.get_formatted_call()}")
             groups_dict[chatid] = game
 
 
@@ -124,11 +128,13 @@ def join(update, context) -> None:
     if not chat_type.endswith("group"):
         utils.send_message(chatid, "You can only join a game in a group!")
     elif chatid in groups_dict.keys():
-        group_game: Game = groups_dict.get(chatid)
+        game: Game = groups_dict.get(chatid)
         user = User(username)
-        if group_game.is_user_present(user) is False:
-            group_game.add_user(user)
-            groups_dict[chatid] = group_game
+        if game.is_started:
+            utils.send_message(chatid, "You cannot join a game that has already started!")
+        elif game.is_user_present(user) is False:
+            game.add_user(user)
+            groups_dict[chatid] = game
             utils.send_message(chatid, f"{user.username} joined the game!")
         else:
             utils.send_message(chatid, f"{user.username} has already joined the game!")
@@ -277,15 +283,15 @@ def inline_caps(update, context):
             game: Game = searched_game
             break
 
-    if inline_user is None or game is None or game.is_ended:
+    if inline_user is None or game is None:
         return  # Todo eventually display no game in progress status or user not in game or something similar
     elif game.is_started is False:
         return  # Todo eventually display game still in join mode status
-    elif game.judge == inline_user:
-        return  # Todo handle judge who should not answer
+    #elif game.judge == inline_user:
+    #    return  # Todo handle judge who should not answer
 
     results = [InlineQueryResultArticle(
-        id=f"{User.username}:{response}",
+        id=f"{inline_user.username}:{response}"[:64],
         title=response,
         input_message_content=InputTextMessageContent(response)
     ) for response in inline_user.responses]
@@ -308,8 +314,10 @@ def handle_response_by_user(update, context):
         return
     else:
         user: User = game.get_user(username)
-    if game.is_started and game.is_answering_mode:
+    if game.is_started:
         if message_text not in user.responses:
+            return
+        if not game.round.is_answering_mode:
             return
         if not user.has_answered:
             if game.round.call.replacements > 1:
@@ -361,6 +369,7 @@ def handle_response_chose_winner_callback(update, context):
     if not game.new_round():
         actually_end_game(chatid)
     else:
+        utils.send_message(chatid, f"{game.judge.username} is asking:\n{game.round.call.get_formatted_call()}")
         groups_dict[chatid] = game
 
 
@@ -380,6 +389,8 @@ dispatcher.add_handler(CommandHandler(('set_packs'), set_packs))
 dispatcher.add_handler(CallbackQueryHandler(handle_response_chose_winner_callback, pattern='_rcw'))
 dispatcher.add_handler(CallbackQueryHandler(update_set_packs_keyboard_callback, pattern='>>>_next_pack_page'))
 dispatcher.add_handler(CallbackQueryHandler(set_packs_callback, pattern='_ppp'))
+
+dispatcher.add_handler(MessageHandler(Filters.text,handle_response_by_user))
 
 dispatcher.add_handler(InlineQueryHandler(inline_caps))
 dispatcher.add_handler(MessageHandler(Filters.command, unknown))

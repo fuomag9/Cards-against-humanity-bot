@@ -6,7 +6,7 @@ from modules.User import User
 
 class Round:
     def __init__(self, call: Call):
-        self.is_answering_mode = False
+        self.is_answering_mode = True
         self.is_judging_mode = False
         self.call: Call = call
         self.answers: Dict[User: List[str]] = {}
