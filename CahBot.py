@@ -309,7 +309,10 @@ def inline_caps(update, context):
 
     # Todo: eventually implement this in another way if search becomes too slow
     game = Game.find_game_from_username(username, groups_dict)
-    inline_user = game.get_user(username)
+    if isinstance(game, Game):
+        inline_user = game.get_user(username)
+    else:
+        pass #Todo: fix this
 
     if game is None:
         return  # Todo eventually display no game in progress status or user not in game or something similar
@@ -319,7 +322,7 @@ def inline_caps(update, context):
         return  # Todo handle judge who should not answer
 
     results = [InlineQueryResultArticle(
-        id=f"{inline_user.username}:{response}"[:64],
+        id=f"{inline_user.username}:{response}"[:60],
         title=response,
         input_message_content=InputTextMessageContent(response)
     ) for response in inline_user.responses]
@@ -410,7 +413,7 @@ def handle_response_chose_winner_callback(update, context):
 
     formatted_game_call: str = game.round.call.get_formatted_call()
 
-    winning_answer = game.round.answers[user.username]
+    winning_answer = game.round.answers[who_submitted_the_response.username]
     for answer in winning_answer:
         formatted_game_call = formatted_game_call.replace("_", f"<b>{answer}</b>")
 
