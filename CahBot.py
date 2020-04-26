@@ -374,7 +374,7 @@ def handle_response_by_user(update, context):
 
                 buttons_list = []
                 for user in list(filter(lambda x: x != game.judge, game.users)):
-                    user_answer_formatted = f"{','.join(game.round.get_user_answers(user.username))}"
+                    user_answer_formatted = f"{', '.join(game.round.get_user_answers(user.username))}"
                     buttons_list.append(
                         [InlineKeyboardButton(user_answer_formatted, callback_data=f'{user.username}_rcw')])
 
@@ -402,7 +402,7 @@ def handle_response_chose_winner_callback(update, context):
 
     buttons_list = []
     for user in list(filter(lambda x: x != game.judge, game.users)):
-        user_answer_formatted = f"{user.username}: {','.join(game.round.get_user_answers(user.username))}"
+        user_answer_formatted = f"{user.username}: {', '.join(game.round.get_user_answers(user.username))}"
         buttons_list.append(
             [InlineKeyboardButton(user_answer_formatted, callback_data=f'none')])
 
@@ -412,7 +412,7 @@ def handle_response_chose_winner_callback(update, context):
 
     winning_answer = game.round.answers[who_submitted_the_response.username]
     for answer in winning_answer:
-        formatted_game_call = formatted_game_call.replace("_", f"<b>{answer}</b>")
+        formatted_game_call = formatted_game_call.replace("_", f"<b>{answer}</b>", 1)
 
     query.edit_message_text(text=f"@{who_submitted_the_response.username} won!\n{formatted_game_call}",
                             reply_markup=message_markup, parse_mode=telegram.ParseMode.HTML)
