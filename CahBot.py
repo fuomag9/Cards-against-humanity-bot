@@ -280,7 +280,7 @@ def set_rounds(update, context) -> None:
     chat_type = update.message.chat.type
     args = context.args
     if len(args) != 1:
-        utils_instance.send_message(chatid,"You used the command in the wrong way, use it like /set_rounds 41")
+        utils.send_message(chatid,"You used the command in the wrong way, use it like /set_rounds 41")
     elif not chat_type.endswith("group"):
         utils.send_message(chatid, "You can only get set the number of rounds in a group!")
     elif chatid in groups_dict.keys():
