@@ -44,6 +44,6 @@ ap.add_argument(
     "--database-file",
     required=False,
     type=str,
-    default=str(Path.cwd()/"database.db"),
-    help=f"Logging file location, Default={Path.cwd()/'database.db'}")
+    default=str(Path.cwd() / "database.db"),
+    help=f"Logging file location, Default={Path.cwd() / 'database.db'}")
 args = vars(ap.parse_args())

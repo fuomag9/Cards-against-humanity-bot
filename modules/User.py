@@ -1,11 +1,11 @@
 from datetime import datetime
-from typing import List
+from typing import List, Union
 
 
 class User:
     def __init__(self, username: str):
         self.responses: List[str] = []
-        self.last_response_date: (datetime, None) = None
+        self.last_response_date: Union[datetime, None] = None
         self.username = username
         self.has_answered = False
         self.score = 0

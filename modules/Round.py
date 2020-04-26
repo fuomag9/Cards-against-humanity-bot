@@ -1,7 +1,6 @@
 from typing import Dict, List
 
 from modules.Call import Call
-from modules.User import User
 
 
 class Round:
@@ -17,5 +16,5 @@ class Round:
     def get_all_answers(self) -> List[List[str]]:
         return [self.get_user_answers(username) for username in self.answers.keys()]
 
-    def init_user_answers(self, username: str):
+    def reset_user_answers(self, username: str):
         self.answers[username] = []

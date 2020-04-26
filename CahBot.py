@@ -1,17 +1,17 @@
 import logging
+from pathlib import Path
 
-from telegram import InlineQueryResultArticle, InputTextMessageContent, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import CommandHandler, Updater, InlineQueryHandler, MessageHandler, Filters, ConversationHandler, \
-    CallbackQueryHandler
 import telegram
+from telegram import InlineQueryResultArticle, InputTextMessageContent, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import CommandHandler, Updater, InlineQueryHandler, MessageHandler, Filters, CallbackQueryHandler
 
 from modules.Argparse_args import args as argparse_args
 from modules.Game import Game
+from modules.MultiPack import MultiPack
+from modules.PacksInit import PacksInit
 from modules.User import User
 from modules.Utils import Utils
-from modules.PacksInit import PacksInit
-from modules.MultiPack import MultiPack
-from pathlib import Path
+import copy
 
 updater = Updater(token=argparse_args["key"], use_context=True)
 dispatcher = updater.dispatcher
@@ -84,15 +84,15 @@ def start_game(update, context) -> None:
                 utils.send_message(chatid, "You can't start a game with no pack selected!")
                 return
             elif len(game.users) == 1:
-                utils.send_message(chatid, "You need at least 2 people to play a game!")
+                utils.send_message(chatid, "You need at least 2 people to start a game!")
                 return
             game.is_started = True
             game.multipack = MultiPack(list_of_packs)
+            game.multipack_backup = copy.deepcopy(game.multipack)
             utils.send_message(chatid, "Game started!")
             game.new_round()
-            utils.send_message(chatid,f"{game.judge.username} is asking:\n{game.round.call.get_formatted_call()}")
-            bot.delete_message(chatid,game.pack_selection_ui.message_selection_id)
-
+            utils.send_message(chatid, f"{game.judge.username} is asking:\n{game.round.call.get_formatted_call()}")
+            bot.delete_message(chatid, game.pack_selection_ui.message_selection_id)
 
 
 def actually_end_game(chatid) -> None:
@@ -130,13 +130,16 @@ def join(update, context) -> None:
         utils.send_message(chatid, "You can only join a game in a group!")
     elif chatid in groups_dict.keys():
         game: Game = groups_dict.get(chatid)
-        #Todo: handle when user has no username (it's None)
+        # Todo: handle when user has no username (it's None)
         user = User(username)
         if game.is_started:
             utils.send_message(chatid, "You cannot join a game that has already started!")
-        elif game.is_user_present(user) is False:
-            game.add_user(user)
 
+        found_game = game.find_game_from_username(user.username)
+        if found_game is None:
+            utils.send_message("You cannot join more than one game at the same time for now, sorry :(")
+        elif found_game is False:
+            game.add_user(user)
             utils.send_message(chatid, f"{user.username} joined the game!")
         else:
             utils.send_message(chatid, f"{user.username} has already joined the game!")
@@ -185,14 +188,13 @@ def set_packs_callback(update, context) -> None:
         return
     game: Game = groups_dict[chatid]
 
-    selected_pack = query.data.replace("_ppp","")
+    selected_pack = query.data.replace("_ppp", "")
     if selected_pack not in game.pack_selection_ui.pack_names:
         game.pack_selection_ui.pack_names.append(selected_pack)
     else:
         game.pack_selection_ui.pack_names.remove(selected_pack)
 
     game.pack_selection_ui.message_selection_id = query.message.message_id
-
 
     min_index = game.pack_selection_ui.page_index * game.pack_selection_ui.items_per_page
     max_index = min_index + game.pack_selection_ui.items_per_page
@@ -220,7 +222,6 @@ def update_set_packs_keyboard_callback(update, context) -> None:
         return
     game: Game = groups_dict[chatid]
     game.pack_selection_ui.page_index += 1
-
 
     min_index = game.pack_selection_ui.page_index * game.pack_selection_ui.items_per_page
     max_index = min_index + game.pack_selection_ui.items_per_page
@@ -250,7 +251,7 @@ def leave(update, context) -> None:
             game.remove_user(user)
 
             utils.send_message(chatid, f"{user.username} left the game!")
-            if len(game.users) == 0:
+            if len(game.users) == 1:
                 actually_end_game(chatid)
         else:
             utils.send_message(chatid, f"{user.username} has already left the game!")
@@ -273,6 +274,30 @@ def status(update, context) -> None:
     else:
         utils.send_message(chatid, "There is no game running! Start one with /new_game")
 
+def set_rounds(update, context) -> None:
+    chatid = update.message.chat_id
+    username = update.message.from_user.username
+    chat_type = update.message.chat.type
+    args = CallbackContext.args
+    if len(args) != 1:
+        utils_instance.send_message(chatid,"You used the command in the wrong way, use it like /set_rounds 41")
+    elif not chat_type.endswith("group"):
+        utils.send_message(chatid, "You can only get set the number of rounds in a group!")
+    elif chatid in groups_dict.keys():
+        game: Game = groups_dict[chatid]
+        if game.is_started:
+            utils.send_message(chatid, "You cannot change the number of rounds while in a game!")
+        else:
+            try:
+                number_of_rounds : int = int(args[0])
+            except ValueError:
+                utils.send_message(chatid, "You used the command in the wrong way, use it like /set_rounds 41")
+                return
+            game.rounds = number_of_rounds
+        utils.send_message(chatid, f"The game rounds have been changed to {number_of_rounds}")
+    else:
+        utils.send_message(chatid, "There is no game running! Start one with /new_game")
+
 
 def inline_caps(update, context):
     query = update.inline_query.query
@@ -282,13 +307,9 @@ def inline_caps(update, context):
         return
 
     # Todo: eventually implement this in another way if search becomes too slow
-    for searched_game in list(groups_dict.values()):
-        inline_user: User = searched_game.get_user(username)
-        if inline_user is not None:
-            game: Game = searched_game
-            break
+    game = Game.find_game_from_username(username)
 
-    if inline_user is None or game is None:
+    if game is None:
         return  # Todo eventually display no game in progress status or user not in game or something similar
     elif game.is_started is False:
         return  # Todo eventually display game still in join mode status
@@ -301,8 +322,8 @@ def inline_caps(update, context):
         input_message_content=InputTextMessageContent(response)
     ) for response in inline_user.responses]
 
-    context.bot.answer_inline_query(update.inline_query.id, results = results, cache_time = 2, is_personal = True)
-    #Todo: better way to handle this/delete message
+    context.bot.answer_inline_query(update.inline_query.id, results=results, cache_time=2, is_personal=True)
+    # Todo: better way to handle this/delete message
 
 
 def handle_response_by_user(update, context):
@@ -326,6 +347,8 @@ def handle_response_by_user(update, context):
         if not game.round.is_answering_mode:
             return
         if not user.has_answered:
+            bot.delete_message(chatid, update.message.message_id)
+
             if game.round.call.replacements > 1:
                 utils.send_message(game.chat_id,
                                    f"{user.username} answered {user.completition_answers + 1} of {game.round.call.replacements}")
@@ -349,9 +372,8 @@ def handle_response_by_user(update, context):
 
                 message_markup = InlineKeyboardMarkup(buttons_list)
                 utils.send_message(game.chat_id,
-                                   f"Everyone has answered!\n{game.judge.username} you need to chose the best answer.\n{game.round.call.get_formatted_call()}",
-                                   markup=message_markup)  # Todo: implement @ at user
-
+                                   f"Everyone has answered!\n@{game.judge.username} you need to chose the best answer.\n{game.round.call.get_formatted_call()}",
+                                   markup=message_markup)
 
 
 def handle_response_chose_winner_callback(update, context):
@@ -378,18 +400,21 @@ def handle_response_chose_winner_callback(update, context):
 
     message_markup = InlineKeyboardMarkup(buttons_list)
 
+    formatted_game_call: str = game.round.call.get_formatted_call()
 
-    query.edit_message_text(text=f"{who_submitted_the_response.username} won!\n{game.round.call.get_formatted_call()}", reply_markup = message_markup)
-    utils.send_message(chatid, f"{who_submitted_the_response.username} won!", html=True)  # Todo: superfluo?
+    winning_answer = game.round.answers[user.username]
+    for answer in winning_answer:
+        formatted_game_call = formatted_game_call.replace("_", f"<b>{answer}</b>")
 
-    who_submitted_the_response.score+=1
+    query.edit_message_text(text=f"@{who_submitted_the_response.username} won!\n{formatted_game_call}",
+                            reply_markup=message_markup, parse_mode=telegram.ParseMode.HTML)
 
+    who_submitted_the_response.score += 1
 
     if not game.new_round():
         actually_end_game(chatid)
     else:
-        utils.send_message(chatid, f"{game.judge.username} is asking:\n{game.round.call.get_formatted_call()}")
-
+        utils.send_message(chatid, f"@{game.judge.username} is asking:\n{game.round.call.get_formatted_call()}")
 
 
 def unknown(update, context):
@@ -406,12 +431,11 @@ dispatcher.add_handler(CommandHandler(('leave'), leave))
 dispatcher.add_handler(CommandHandler(('status'), status))
 dispatcher.add_handler(CommandHandler(('set_packs'), set_packs))
 
-
 dispatcher.add_handler(CallbackQueryHandler(handle_response_chose_winner_callback, pattern='_rcw'))
 dispatcher.add_handler(CallbackQueryHandler(update_set_packs_keyboard_callback, pattern='>>>_next_pack_page'))
 dispatcher.add_handler(CallbackQueryHandler(set_packs_callback, pattern='_ppp'))
 
-dispatcher.add_handler(MessageHandler(Filters.text,handle_response_by_user))
+dispatcher.add_handler(MessageHandler(Filters.text, handle_response_by_user))
 
 dispatcher.add_handler(InlineQueryHandler(inline_caps))
 dispatcher.add_handler(MessageHandler(Filters.command, unknown))

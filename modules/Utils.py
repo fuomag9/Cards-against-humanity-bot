@@ -1,6 +1,5 @@
 import logging
 import sqlite3
-from functools import wraps
 from pathlib import Path
 
 import telegram
@@ -82,7 +81,7 @@ class Utils:
     def get_all_table_names(self) -> list:
         return self.retrieve_query_results("""SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;""")
 
-    def drop_table(self, table_name : str) -> None:
+    def drop_table(self, table_name: str) -> None:
         self.exec_query(f"""DROP TABLE IF EXISTS {table_name};""")
 
     def send_message(self, chatid: str, messaggio: str, html: bool = False, markup=None) -> None:

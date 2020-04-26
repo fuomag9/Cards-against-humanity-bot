@@ -1,16 +1,17 @@
 import json
-from pathlib import Path
 import pickle
+from pathlib import Path
 
 import requests
 
-from modules.Pack import Pack
 from modules.Call import Call
+from modules.Pack import Pack
+
 
 class PacksInit():
     def __init__(self, pack_json: Path):
         self.packs: List[Pack] = []
-        self.pack_json : Path = pack_json
+        self.pack_json: Path = pack_json
 
     def is_packs_file_empty(self) -> bool:
         return not self.pack_json.is_file()
@@ -26,31 +27,31 @@ class PacksInit():
             return False
 
     def dump_to_pickle(self):
-        with open(self.pack_json,"wb") as file:
+        with open(self.pack_json, "wb") as file:
             data = pickle.dumps(self.packs)
             file.write(data)
 
     def load_from_pickle(self):
-        with open(self.pack_json,"rb") as file:
+        with open(self.pack_json, "rb") as file:
             data = file.read()
             self.packs = pickle.loads(data)
 
     def get_packs_names(self) -> list:
         return [pack.name for pack in self.packs]
 
-    def get_pack_by_name(self, pack_name : str) -> Pack:
+    def get_pack_by_name(self, pack_name: str) -> Pack:
         for pack in self.packs:
             if pack.name == pack_name:
                 return pack
 
-    def get_pack_by_truncatedstr_name(self, pack_name : str, truncated_length : int = 60) -> Pack:
+    def get_pack_by_truncatedstr_name(self, pack_name: str, truncated_length: int = 60) -> Pack:
         for pack in self.packs:
             if pack.name[:truncated_length] == pack_name:
-                return pack #Todo: eventually check for duplicates pack, but may not be an issue
+                return pack  # Todo: eventually check for duplicates pack, but may not be an issue
 
     def downloads_packs_data(self, pages) -> None:
         if pages > 101:
-            raise ValueError("The page number is too high") #packs after 100*12 might get boring/useless
+            raise ValueError("The page number is too high")  # packs after 100*12 might get boring/useless
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:76.0) Gecko/20100101 Firefox/76.0',
             'Accept': 'application/json, text/plain, */*',
@@ -81,9 +82,9 @@ class PacksInit():
             calls_json = json.loads(
                 requests.get(f'https://api.cardcastgame.com/v1/decks/{pack["code"]}/calls', headers=headers).content)
             responses_json = json.loads(requests.get(f'https://api.cardcastgame.com/v1/decks/{pack["code"]}/responses',
-                                                headers=headers).content)
+                                                     headers=headers).content)
 
-            calls_list : List[Call] = [Call(call=x['text'],replacements=len(x['text'])-1) for x in calls_json]
+            calls_list: List[Call] = [Call(call=x['text'], replacements=len(x['text']) - 1) for x in calls_json]
             responses_list = [x['text'][0] for x in responses_json]
             del calls_json, responses_json
             p: Pack = Pack(name=pack['name'], calls=calls_list, responses=responses_list, is_nsfw=pack['is_nsfw'])

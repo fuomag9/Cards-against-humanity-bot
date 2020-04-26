@@ -1,13 +1,16 @@
+from __future__ import annotations
+
 import random
-from typing import List
+from typing import List, Union
 
 from multimethod import multimethod
 
 from modules.Call import Call
 from modules.MultiPack import MultiPack
+from modules.PackSelectionUI import PackSelectionUI
 from modules.Round import Round
 from modules.User import User
-from modules.PackSelectionUI import PackSelectionUI
+import copy
 
 
 class Game:
@@ -26,6 +29,7 @@ class Game:
         self.users: List[User] = []
         self.initiated_by: User = initiated_by
         self.multipack: (MultiPack, None) = packlist
+        self.multipack_backup: (MultiPack, None) = packlist
         self.rounds: int = rounds
         self.round: (Round, None) = None
         self.judge_index = 0
@@ -33,33 +37,31 @@ class Game:
         self.max_responses_per_user: int = max_responses_per_user
         self.pack_selection_ui = PackSelectionUI()
 
-    def get_random_call(self) -> Call:
-        # Todo: handle when calls are 0
+    def get_random_call(self) -> Union[Call, None]:
         try:
             chosen_call = random.choice(self.multipack.calls)
             self.multipack.calls.remove(chosen_call)
             return chosen_call
-        except Exception:
-            return Call([""], 1)
+        except IndexError:
+            return None
 
-    def get_random_response(self):
-        # Todo: handle when responses are 0
+    def get_random_response(self) -> Union[str, None]:
         try:
             chosen_response = random.choice(self.multipack.responses)
             self.multipack.responses.remove(chosen_response)
             return chosen_response
-        except Exception:
-            return ""
+        except IndexError:
+            return None
 
     @multimethod
-    def is_user_present(self, user: User):
+    def is_user_present(self, user: User) -> bool:
         if self.users is None:
             return False
 
         return self.get_user(user.username) is not None
 
     @multimethod
-    def is_user_present(self, username: str):
+    def is_user_present(self, username: str) -> bool:
         if self.users is None:
             return False
 
@@ -72,14 +74,14 @@ class Game:
         self.users.remove(user)
 
     @multimethod
-    def get_user(self, username) -> (User, None):
+    def get_user(self, username) -> Union[User, None]:
         for user in self.users:
             if user.username == username:
                 return user
         return None
 
     @get_user.register
-    def get_user(self, searched_user: str) -> (User, None):
+    def get_user(self, searched_user: str) -> Union[User, None]:
         for user in self.users:
             if searched_user == user.username:
                 return user
@@ -89,9 +91,11 @@ class Game:
         number_of_responses_needed: int = self.max_responses_per_user - len(user.responses)
         for _ in range(0, number_of_responses_needed):
             random_response = self.get_random_response()
-            if random_response != "":
-                user.responses.append(random_response)
-            #Todo: handle when responses are finished
+            if random_response is None:
+                self.multipack.responses = self.multipack_backup.responses.copy()
+                # Todo: notify that responses have been refilled
+                random_response = self.get_random_response()
+            user.responses.append(random_response)
 
     def scoreboard(self) -> List[User]:
         """
@@ -110,14 +114,18 @@ class Game:
             return False
         else:
             chosen_call: Call = self.get_random_call()
-            # assumo chosen_call.replacements < self.max_responses_per_user
+            if chosen_call is None:
+                # Todo: eventually print that calls have been reloaded
+                self.multipack.calls = self.multipack_backup.calls.copy()
+                chosen_call: Call = self.get_random_call()
+
             self.next_judge()
             self.round = Round(chosen_call)
             for user in self.users:
                 self.fill_user_responses(user)
                 user.has_answered = False
                 user.completition_answers = 0
-                self.round.init_user_answers(user.username)
+                self.round.reset_user_answers(user.username)
             self.rounds -= 1
             return True
 
@@ -131,3 +139,20 @@ class Game:
             self.judge_index += 1
 
         self.judge = self.users[self.judge_index]
+
+    @staticmethod
+    def find_game_from_username(username, groups_dict: {}) -> Union[Game, False, None]:
+        inline_user: Union[User, None] = None
+        game: Union[Game, None] = None
+        game_count: int = 0
+
+        for searched_game in list(groups_dict.values()):
+            inline_user: User = searched_game.get_user(username)
+            if inline_user is not None:
+                game: Game = searched_game
+                game_count += 1
+                if game_count > 1:
+                    return None
+        if game_count == 0:
+            return False
+        return game
