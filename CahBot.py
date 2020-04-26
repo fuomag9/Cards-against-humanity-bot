@@ -308,7 +308,7 @@ def inline_caps(update, context):
 
     # Todo: eventually implement this in another way if search becomes too slow
     game = Game.find_game_from_username(username, groups_dict)
-    inline_user = game.find_game_from_username(username)
+    inline_user = game.get_user(username)
 
     if game is None:
         return  # Todo eventually display no game in progress status or user not in game or something similar
