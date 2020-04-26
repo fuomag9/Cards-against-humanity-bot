@@ -294,7 +294,7 @@ def set_rounds(update, context) -> None:
                 utils.send_message(chatid, "You used the command in the wrong way, use it like /set_rounds 41")
                 return
             game.rounds = number_of_rounds
-        utils.send_message(chatid, f"The game rounds have been changed to {number_of_rounds}")
+        utils.send_message(chatid, f"The number of rounds has been changed to {number_of_rounds}")
     else:
         utils.send_message(chatid, "There is no game running! Start one with /new_game")
 
