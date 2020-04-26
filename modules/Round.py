@@ -9,10 +9,13 @@ class Round:
         self.is_answering_mode = True
         self.is_judging_mode = False
         self.call: Call = call
-        self.answers: Dict[User: List[str]] = {}
+        self.answers: Dict[str: List[str]] = {}
 
-    def get_user_answers(self, user: User) -> List[str]:
-        return self.answers[user]
+    def get_user_answers(self, username: str) -> List[str]:
+        return self.answers[username]
 
     def get_all_answers(self) -> List[List[str]]:
-        return [self.get_user_answers(user) for user in self.answers.keys()]
+        return [self.get_user_answers(username) for username in self.answers.keys()]
+
+    def init_user_answers(self, username: str):
+        self.answers[username] = []

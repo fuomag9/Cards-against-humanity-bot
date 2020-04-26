@@ -1,12 +1,6 @@
 from datetime import datetime
 from typing import List
 
-from modules.Argparse_args import args as argparse_args
-from modules.Utils import Utils
-
-db_file = argparse_args["database_file"]
-utils = Utils(db_file=db_file)
-
 
 class User:
     def __init__(self, username: str):

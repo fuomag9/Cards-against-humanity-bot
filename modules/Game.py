@@ -35,15 +35,21 @@ class Game:
 
     def get_random_call(self) -> Call:
         # Todo: handle when calls are 0
-        chosen_call = random.choice(self.multipack.calls)
-        self.multipack.calls.remove(chosen_call)
-        return chosen_call
+        try:
+            chosen_call = random.choice(self.multipack.calls)
+            self.multipack.calls.remove(chosen_call)
+            return chosen_call
+        except Exception:
+            return Call([""], 1)
 
     def get_random_response(self):
         # Todo: handle when responses are 0
-        chosen_response = random.choice(self.multipack.responses)
-        self.multipack.responses.remove(chosen_response)
-        return chosen_response
+        try:
+            chosen_response = random.choice(self.multipack.responses)
+            self.multipack.responses.remove(chosen_response)
+            return chosen_response
+        except Exception:
+            return ""
 
     @multimethod
     def is_user_present(self, user: User):
@@ -65,10 +71,6 @@ class Game:
     def remove_user(self, user: User):
         self.users.remove(user)
 
-    def replace_user(self, user: User):
-        index = self.users.index(user)
-        self.users[index] = user
-
     @multimethod
     def get_user(self, username) -> (User, None):
         for user in self.users:
@@ -77,7 +79,7 @@ class Game:
         return None
 
     @get_user.register
-    def get_user(self, searched_user : str) -> (User, None):
+    def get_user(self, searched_user: str) -> (User, None):
         for user in self.users:
             if searched_user == user.username:
                 return user
@@ -106,11 +108,13 @@ class Game:
         else:
             chosen_call: Call = self.get_random_call()
             # assumo chosen_call.replacements < self.max_responses_per_user
+            self.next_judge()
+            self.round = Round(chosen_call)
             for user in self.users:
                 self.fill_user_responses(user)
                 user.has_answered = False
-            self.next_judge()
-            self.round = Round(chosen_call)
+                user.completition_answers = 0
+                self.round.init_user_answers(user.username)
             self.rounds -= 1
             return True
 
