@@ -278,7 +278,7 @@ def set_rounds(update, context) -> None:
     chatid = update.message.chat_id
     username = update.message.from_user.username
     chat_type = update.message.chat.type
-    args = CallbackContext.args
+    args = context.args
     if len(args) != 1:
         utils_instance.send_message(chatid,"You used the command in the wrong way, use it like /set_rounds 41")
     elif not chat_type.endswith("group"):
