@@ -429,6 +429,7 @@ dispatcher.add_handler(CommandHandler(('end_game'), end_game))
 dispatcher.add_handler(CommandHandler(('join'), join))
 dispatcher.add_handler(CommandHandler(('leave'), leave))
 dispatcher.add_handler(CommandHandler(('status'), status))
+dispatcher.add_handler(CommandHandler(('set_rounds'), set_rounds))
 dispatcher.add_handler(CommandHandler(('set_packs'), set_packs))
 
 dispatcher.add_handler(CallbackQueryHandler(handle_response_chose_winner_callback, pattern='_rcw'))
