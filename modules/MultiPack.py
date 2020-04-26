@@ -12,5 +12,5 @@ class MultiPack(Pack):
                 c_p.append(call)
             for response in pack.responses:
                 r_p.append(response)
-        super().__init__(None, c_p, r_p)
+        super().__init__(None, list(set(c_p)), list(set(r_p)))
         del self.name

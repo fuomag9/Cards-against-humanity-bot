@@ -5,10 +5,10 @@ from modules.Call import Call
 
 
 class Pack:
-    def __init__(self, name: Union[str, None], calls: List[Call], responses: List, is_nsfw=False):
+    def __init__(self, name: Union[str, None], calls: List[Call], responses: List[str], is_nsfw=False):
         self.name: str = name
         self.calls: List[Call] = calls
-        self.responses: List = responses
+        self.responses: List[str] = responses
         self.is_nsfw: bool = is_nsfw
 
     @property
