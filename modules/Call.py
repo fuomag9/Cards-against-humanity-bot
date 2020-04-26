@@ -14,4 +14,4 @@ class Call:
         return self.call == other
 
     def __hash__(self):
-        return hash(self.call)
+        return hash(self.get_formatted_call())
