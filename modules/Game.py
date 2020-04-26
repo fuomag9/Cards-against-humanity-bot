@@ -88,7 +88,10 @@ class Game:
     def fill_user_responses(self, user: User):
         number_of_responses_needed: int = self.max_responses_per_user - len(user.responses)
         for _ in range(0, number_of_responses_needed):
-            user.responses.append(self.get_random_response())
+            random_response = self.get_random_response()
+            if random_response != "":
+                user.responses.append(random_response)
+            #Todo: handle when responses are finished
 
     def scoreboard(self) -> List[User]:
         """
