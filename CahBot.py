@@ -267,10 +267,7 @@ def status(update, context) -> None:
         utils.send_message(chatid, "You can only get the game status in a group!")
     elif chatid in groups_dict.keys():
         game: Game = groups_dict[chatid]
-        string_status = ""
-        for username, score in [(u.username, u.score) for u in game.scoreboard()]:
-            string_status += f"{username}: {score} points\n"
-        utils.send_message(chatid, string_status)
+        utils.send_message(chatid, game.get_formatted_scoreboard())
     else:
         utils.send_message(chatid, "There is no game running! Start one with /new_game")
 
@@ -419,9 +416,9 @@ def handle_response_chose_winner_callback(update, context):
 
     query.edit_message_text(text=f"@{who_submitted_the_response.username} won!\n{formatted_game_call}",
                             reply_markup=message_markup, parse_mode=telegram.ParseMode.HTML)
-    utils.send_message(chatid, f"Here's the current scoreboard:\n{game.get_formatted_scoreboard()}")
 
     who_submitted_the_response.score += 1
+    utils.send_message(chatid, f"Here's the current scoreboard:\n{game.get_formatted_scoreboard()}")
 
     if not game.new_round():
         actually_end_game(chatid)
