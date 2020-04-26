@@ -36,6 +36,7 @@ class Game:
         self.judge: User = initiated_by
         self.max_responses_per_user: int = max_responses_per_user
         self.pack_selection_ui = PackSelectionUI()
+        self.can_remove_people_message = True
 
     def get_random_call(self) -> Union[Call, None]:
         try:

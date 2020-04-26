@@ -274,13 +274,14 @@ def status(update, context) -> None:
     else:
         utils.send_message(chatid, "There is no game running! Start one with /new_game")
 
+
 def set_rounds(update, context) -> None:
     chatid = update.message.chat_id
     username = update.message.from_user.username
     chat_type = update.message.chat.type
     args = context.args
     if len(args) != 1:
-        utils.send_message(chatid,"You used the command in the wrong way, use it like /set_rounds 41")
+        utils.send_message(chatid, "You used the command in the wrong way, use it like /set_rounds 41")
     elif not chat_type.endswith("group"):
         utils.send_message(chatid, "You can only get set the number of rounds in a group!")
     elif chatid in groups_dict.keys():
@@ -289,7 +290,7 @@ def set_rounds(update, context) -> None:
             utils.send_message(chatid, "You cannot change the number of rounds while in a game!")
         else:
             try:
-                number_of_rounds : int = int(args[0])
+                number_of_rounds: int = int(args[0])
             except ValueError:
                 utils.send_message(chatid, "You used the command in the wrong way, use it like /set_rounds 41")
                 return
@@ -348,7 +349,13 @@ def handle_response_by_user(update, context):
         if not game.round.is_answering_mode:
             return
         if not user.has_answered:
-            bot.delete_message(chatid, update.message.message_id)
+            if game.can_remove_people_message:
+                try:
+                    bot.delete_message(chatid, update.message.message_id)
+                except telegram.error.BadRequest:
+                    utils.send_message(chatid,
+                                       "You need to set this bot as an admin to delete messages. You won't see this message anymore during this game and the change will be effective in the next one")
+                    game.can_remove_people_message = False
 
             if game.round.call.replacements > 1:
                 utils.send_message(game.chat_id,
