@@ -301,8 +301,8 @@ def inline_caps(update, context):
     query = update.inline_query.query
     username = update.inline_query.from_user.username
 
-    if not query:
-        return
+    # if not query:
+    #     return
 
     # Todo: eventually implement this in another way if search becomes too slow
     game = Game.find_game_from_username(username, groups_dict)
