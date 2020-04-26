@@ -135,7 +135,7 @@ def join(update, context) -> None:
         if game.is_started:
             utils.send_message(chatid, "You cannot join a game that has already started!")
 
-        found_game = game.find_game_from_username(user.username)
+        found_game = game.find_game_from_username(user.username, groups_dict)
         if found_game is None:
             utils.send_message("You cannot join more than one game at the same time for now, sorry :(")
         elif found_game is False:
@@ -307,7 +307,7 @@ def inline_caps(update, context):
         return
 
     # Todo: eventually implement this in another way if search becomes too slow
-    game = Game.find_game_from_username(username)
+    game = Game.find_game_from_username(username, groups_dict)
 
     if game is None:
         return  # Todo eventually display no game in progress status or user not in game or something similar
