@@ -103,8 +103,8 @@ def actually_end_game(chatid) -> None:
     if game.is_started == False:
         utils.send_message(chatid, "Game ended! I don't who won since the game never started")
         return
-    winner, score = game.scoreboard()[0]
-    utils.send_message(chatid, f"Game ended!\n{winner} won with a score of {score}")
+    winner : User = game.scoreboard()[0]
+    utils.send_message(chatid, f"Game ended!\n@{winner.username} won with a score of {winner.score}")
     utils.send_message(chatid, f"Here's the full scoreboard:\n{game.get_formatted_scoreboard()}")
     del groups_dict[chatid]
 
