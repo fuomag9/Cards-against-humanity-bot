@@ -105,7 +105,7 @@ def actually_end_game(chatid) -> None:
         return
     winner : User = game.scoreboard()[0]
     utils.send_message(chatid, f"Game ended!\n@{winner.username} won with a score of {winner.score}")
-    utils.send_message(chatid, f"Here's the full scoreboard:\n{game.get_formatted_scoreboard()}")
+    utils.send_message(chatid, f"Here's the current scoreboard:\n{game.get_formatted_scoreboard()}")
     del groups_dict[chatid]
 
 
@@ -416,6 +416,7 @@ def handle_response_chose_winner_callback(update, context):
 
     query.edit_message_text(text=f"@{who_submitted_the_response.username} won!\n{formatted_game_call}",
                             reply_markup=message_markup, parse_mode=telegram.ParseMode.HTML)
+    utils.send_message(chatid, f"Here's the current scoreboard:\n{game.get_formatted_scoreboard()}")
 
     who_submitted_the_response.score += 1
 
