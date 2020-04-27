@@ -130,8 +130,10 @@ def join(update, context) -> None:
         utils.send_message(chatid, "You can only join a game in a group!")
     elif chatid in groups_dict.keys():
         game: Game = groups_dict.get(chatid)
-        # Todo: handle when user has no username (it's None)
         user = User(username)
+        if user.username is None:
+            utils.send_message(chatid,"I'm sorry but you need to have an username to join a game")
+            return
         if game.is_started:
             utils.send_message(chatid, "You cannot join a game that has already started!")
 
