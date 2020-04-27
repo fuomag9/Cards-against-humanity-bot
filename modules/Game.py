@@ -28,10 +28,10 @@ class Game:
         self.chat_id = chat_id
         self.users: List[User] = []
         self.initiated_by: User = initiated_by
-        self.multipack: (MultiPack, None) = packlist
-        self.multipack_backup: (MultiPack, None) = packlist
+        self.multipack: Union[MultiPack, None] = packlist
+        self.multipack_backup: Union[MultiPack, None] = packlist
         self.rounds: int = rounds
-        self.round: (Round, None) = None
+        self.round: Union[Round, None] = None
         self.judge_index = 0
         self.judge: User = initiated_by
         self.max_responses_per_user: int = max_responses_per_user

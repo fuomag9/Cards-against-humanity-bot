@@ -249,17 +249,35 @@ def leave(update, context) -> None:
     elif chatid in groups_dict.keys():
         game: Game = groups_dict.get(chatid)
         user = User(username)
-        if game.is_user_present(user) is True:
-            game.remove_user(user)
-
-            utils.send_message(chatid, f"{user.username} left the game!")
-            if len(game.users) == 1:
-                actually_end_game(chatid)
-        else:
-            utils.send_message(chatid, f"{user.username} has already left the game!")
+        actually_leave(game, user, left_group=False)
     else:
         utils.send_message(chatid, "There is no game running! Start one with /new_game")
 
+
+def handle_user_who_quitted_group(update, context) -> None:
+    chatid = update.message.chat_id
+    username = update.message.from_user.username
+    chat_type = update.message.chat.type
+    if not chat_type.endswith("group"):
+        return
+    user : User = User(username)
+    if chatid in groups_dict.keys():
+        game: Game = groups_dict.get(chatid)
+        actually_leave(game, user, left_group= True)
+
+
+def actually_leave(game: Game, user : User, left_group : bool):
+    if game.is_user_present(user):
+        game.remove_user(user)
+
+        utils.send_message(chatid, f"{user.username} left the game!")
+        if len(game.users) == 1:
+            actually_end_game(chatid)
+        else:
+            if game.round:
+                game.round.delete_user_answers(user)
+    elif left_group:
+        utils.send_message(chatid, f"@{user.username} you have already left the game!")
 
 def status(update, context) -> None:
     chatid = update.message.chat_id
@@ -374,7 +392,6 @@ def handle_response_by_user(update, context):
                 user.has_answered = True
 
             if game.have_all_users_answered():
-                # todo: handle if an user quitted
                 game.round.is_judging_mode = True
                 game.round.is_answering_mode = False
 
@@ -420,7 +437,12 @@ def handle_response_chose_winner_callback(update, context):
     for answer in winning_answer:
         formatted_game_call = formatted_game_call.replace("_", f"<b>{answer}</b>", 1)
 
-    query.edit_message_text(text=f"@{who_submitted_the_response.username} won!\n{formatted_game_call}",
+
+    if not game.is_user_present(who_submitted_the_response):
+        query.edit_message_reply_markup(reply_markup=message_markup)
+        utils.send_message(chatid, f"I'm sorry, but since {who_submitted_the_response} has left the game you'll have to chose another winner")
+    else:
+        query.edit_message_text(text=f"@{who_submitted_the_response.username} won!\n{formatted_game_call}",
                             reply_markup=message_markup, parse_mode=telegram.ParseMode.HTML)
 
     who_submitted_the_response.score += 1
@@ -451,7 +473,10 @@ dispatcher.add_handler(CallbackQueryHandler(handle_response_chose_winner_callbac
 dispatcher.add_handler(CallbackQueryHandler(update_set_packs_keyboard_callback, pattern='>>>_next_pack_page'))
 dispatcher.add_handler(CallbackQueryHandler(set_packs_callback, pattern='_ppp'))
 
+dispatcher.add_handler(MessageHandler(Filters.status_update.left_chat_member, handle_user_who_quitted_group))
 dispatcher.add_handler(MessageHandler(Filters.text, handle_response_by_user))
+
+
 
 dispatcher.add_handler(InlineQueryHandler(inline_caps))
 dispatcher.add_handler(MessageHandler(Filters.command, unknown))
