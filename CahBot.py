@@ -308,14 +308,14 @@ def inline_caps(update, context):
     if isinstance(game, Game):
         inline_user = game.get_user(username)
     else:
-        pass  # Todo: fix this
+        return
 
     if game is None:
         return  # Todo eventually display no game in progress status or user not in game or something similar
     elif game.is_started is False:
         return  # Todo eventually display game still in join mode status
     elif game.judge.username == username:
-        return  # Todo handle judge who should not answer
+        return  # Todo eventually display that judge should not answer
 
     # results = [InlineQueryResultArticle(
     #     id=f"{inline_user.username}:{response}"[:60],
@@ -345,11 +345,10 @@ def handle_response_by_user(update, context):
     if not chatid in groups_dict.keys():
         return
     game: Game = groups_dict[chatid]
-    if not game.is_user_present(
-            username):  # Todo: this could technically be coupled with the statement below to save time
+    user: User = game.get_user(username)
+    if user is None:
         return
-    else:
-        user: User = game.get_user(username)
+
     if game.is_started:
         if message_text not in user.responses:
             return
