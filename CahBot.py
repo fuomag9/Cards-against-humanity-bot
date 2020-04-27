@@ -103,7 +103,7 @@ def actually_end_game(chatid) -> None:
     if game.is_started == False:
         utils.send_message(chatid, "Game ended! I don't who won since the game never started")
         return
-    winner : User = game.scoreboard()[0]
+    winner: User = game.scoreboard()[0]
     utils.send_message(chatid, f"Game ended!\n@{winner.username} won with a score of {winner.score}")
     utils.send_message(chatid, f"Here's the current scoreboard:\n{game.get_formatted_scoreboard()}")
     del groups_dict[chatid]
@@ -301,15 +301,12 @@ def inline_caps(update, context):
     query = update.inline_query.query
     username = update.inline_query.from_user.username
 
-    # if not query:
-    #     return
-
     # Todo: eventually implement this in another way if search becomes too slow
     game = Game.find_game_from_username(username, groups_dict)
     if isinstance(game, Game):
         inline_user = game.get_user(username)
     else:
-        pass #Todo: fix this
+        pass  # Todo: fix this
 
     if game is None:
         return  # Todo eventually display no game in progress status or user not in game or something similar
@@ -318,11 +315,20 @@ def inline_caps(update, context):
     elif game.judge.username == username:
         return  # Todo handle judge who should not answer
 
-    results = [InlineQueryResultArticle(
-        id=f"{inline_user.username}:{response}"[:60],
-        title=response,
-        input_message_content=InputTextMessageContent(response)
-    ) for response in inline_user.responses]
+    # results = [InlineQueryResultArticle(
+    #     id=f"{inline_user.username}:{response}"[:60],
+    #     title=response,
+    #     input_message_content=InputTextMessageContent(response)
+    # ) for response in inline_user.responses]
+
+    results = []
+    for index, response in enumerate(inline_user.responses):
+        results.append(
+            InlineQueryResultArticle(
+                id=str(index),
+                title=response,
+                input_message_content=InputTextMessageContent(response)
+            ))
 
     context.bot.answer_inline_query(update.inline_query.id, results=results, cache_time=2, is_personal=True)
     # Todo: better way to handle this/delete message

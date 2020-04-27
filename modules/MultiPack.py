@@ -12,5 +12,7 @@ class MultiPack(Pack):
                 c_p.append(call)
             for response in pack.responses:
                 r_p.append(response)
+
+        #Todo: fix calls still being duplicated
         super().__init__(None, list(set(c_p)), list(set(r_p)))
         del self.name
