@@ -105,7 +105,7 @@ def actually_end_game(chatid) -> None:
         return
     winner: User = game.scoreboard()[0]
     utils.send_message(chatid, f"Game ended!\n@{winner.username} won with a score of {winner.score}")
-    utils.send_message(chatid, f"Here's the current scoreboard:\n{game.get_formatted_scoreboard()}")
+    utils.send_message(chatid, f"Here's the full scoreboard:\n{game.get_formatted_scoreboard()}")
     del groups_dict[chatid]
 
 
@@ -163,13 +163,19 @@ def set_packs(update, context) -> None:
         utils.send_message(chatid, "You cannot chose packs after a game has started!")
         return
 
+    if game.pack_selection_ui.message_selection_id is not None:
+        utils.send_message(chatid,"You already have a pack selection interface open!")
+        return
+
+    game.pack_selection_ui.message_selection_id = 0 # so it counts as "opened"
+
     min_index = game.pack_selection_ui.page_index * game.pack_selection_ui.items_per_page
     max_index = min_index + game.pack_selection_ui.items_per_page
     packs_to_use_in_keyboard: List[str] = packs.get_packs_names()[min_index:max_index]
     packs_keyboard = []
     for pack_name in packs_to_use_in_keyboard:
         if pack_name in game.pack_selection_ui.pack_names:
-            packs_keyboard.append([InlineKeyboardButton(f"<b>{pack_name}</b>", callback_data=f'{pack_name[:60]}_ppp')])
+            packs_keyboard.append([InlineKeyboardButton(f"{pack_name} ✔", callback_data=f'{pack_name[:60]}_ppp')])
         else:
             packs_keyboard.append([InlineKeyboardButton(pack_name, callback_data=f'{pack_name[:60]}_ppp')])
 
