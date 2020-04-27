@@ -91,7 +91,7 @@ def start_game(update, context) -> None:
             game.multipack_backup = copy.deepcopy(game.multipack)
             utils.send_message(chatid, "Game started!")
             game.new_round()
-            utils.send_message(chatid, f"{game.judge.username} is asking:\n{game.round.call.get_formatted_call()}")
+            utils.send_message(chatid, f"{game.judge.username} is asking:\n{game.round.call_list.get_formatted_call()}")
             bot.delete_message(chatid, game.pack_selection_ui.message_selection_id)
 
 
@@ -331,7 +331,6 @@ def inline_caps(update, context):
             ))
 
     context.bot.answer_inline_query(update.inline_query.id, results=results, cache_time=2, is_personal=True)
-    # Todo: better way to handle this/delete message
 
 
 def handle_response_by_user(update, context):
@@ -363,13 +362,13 @@ def handle_response_by_user(update, context):
                                        "You need to set this bot as an admin to delete messages. You won't see this message anymore during this game and the change will be effective in the next one")
                     game.can_remove_people_message = False
 
-            if game.round.call.replacements > 1:
+            if game.round.call_list.replacements > 1:
                 utils.send_message(game.chat_id,
-                                   f"{user.username} answered {user.completition_answers + 1} of {game.round.call.replacements}")
+                                   f"{user.username} answered {user.completition_answers + 1} of {game.round.call_list.replacements}")
             user.completition_answers += 1
             user.responses.remove(message_text)
             game.round.answers[user.username].append(message_text)
-            if user.completition_answers == game.round.call.replacements:
+            if user.completition_answers == game.round.call_list.replacements:
                 utils.send_message(game.chat_id, f"{user.username} has finished answering!")
                 user.has_answered = True
 
@@ -386,7 +385,7 @@ def handle_response_by_user(update, context):
 
                 message_markup = InlineKeyboardMarkup(buttons_list)
                 utils.send_message(game.chat_id,
-                                   f"Everyone has answered!\n@{game.judge.username} you need to chose the best answer.\n{game.round.call.get_formatted_call()}",
+                                   f"Everyone has answered!\n@{game.judge.username} you need to chose the best answer.\n{game.round.call_list.get_formatted_call()}",
                                    markup=message_markup)
 
 
@@ -414,7 +413,7 @@ def handle_response_chose_winner_callback(update, context):
 
     message_markup = InlineKeyboardMarkup(buttons_list)
 
-    formatted_game_call: str = game.round.call.get_formatted_call()
+    formatted_game_call: str = game.round.call_list.get_formatted_call()
 
     winning_answer = game.round.answers[who_submitted_the_response.username]
     for answer in winning_answer:
@@ -429,7 +428,7 @@ def handle_response_chose_winner_callback(update, context):
     if not game.new_round():
         actually_end_game(chatid)
     else:
-        utils.send_message(chatid, f"@{game.judge.username} is asking:\n{game.round.call.get_formatted_call()}")
+        utils.send_message(chatid, f"@{game.judge.username} is asking:\n{game.round.call_list.get_formatted_call()}")
 
 
 def unknown(update, context):

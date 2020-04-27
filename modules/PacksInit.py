@@ -84,7 +84,7 @@ class PacksInit():
             responses_json = json.loads(requests.get(f'https://api.cardcastgame.com/v1/decks/{pack["code"]}/responses',
                                                      headers=headers).content)
 
-            calls_list: List[Call] = [Call(call=x['text'], replacements=len(x['text']) - 1) for x in calls_json]
+            calls_list: List[Call] = [Call(call_list=x['text']) for x in calls_json]
             responses_list = [x['text'][0] for x in responses_json]
             del calls_json, responses_json
             p: Pack = Pack(name=pack['name'], calls=calls_list, responses=responses_list, is_nsfw=pack['is_nsfw'])
