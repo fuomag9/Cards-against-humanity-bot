@@ -268,6 +268,7 @@ def handle_user_who_quitted_group(update, context) -> None:
 
 def actually_leave(game: Game, user : User, left_group : bool):
     if game.is_user_present(user):
+        judge_copy = copy.deepcopy(game.judge)
         game.remove_user(user)
 
         utils.send_message(chatid, f"{user.username} left the game!")
@@ -276,6 +277,9 @@ def actually_leave(game: Game, user : User, left_group : bool):
         else:
             if game.round:
                 game.round.delete_user_answers(user)
+            #Todo: eventually check if the deep copy is actually needed or python doesn't make a reference when asigning self.judge (it probably does)
+            if judge_copy == user:
+                utils.send_message(f"Since the judge quitted a new round will start!")
     elif left_group:
         utils.send_message(chatid, f"@{user.username} you have already left the game!")
 
@@ -417,9 +421,7 @@ def handle_response_chose_winner_callback(update, context):
     if not chatid in groups_dict.keys():
         return
     game: Game = groups_dict[chatid]
-    who_submitted_the_response: User = game.get_user(query.data.split("_rcw")[0])
-    if not game.is_user_present(game.judge):
-        return  # todo: handle if judge quitted
+    winner_user: User = game.get_user(query.data.split("_rcw")[0])
     if query.from_user.username != game.judge.username:
         return
 
@@ -433,19 +435,19 @@ def handle_response_chose_winner_callback(update, context):
 
     formatted_game_call: str = game.round.call_list.get_formatted_call()
 
-    winning_answer = game.round.answers[who_submitted_the_response.username]
+    winning_answer = game.round.answers[winner_user.username]
     for answer in winning_answer:
         formatted_game_call = formatted_game_call.replace("_", f"<b>{answer}</b>", 1)
 
 
-    if not game.is_user_present(who_submitted_the_response):
+    if not game.is_user_present(winner_user):
         query.edit_message_reply_markup(reply_markup=message_markup)
-        utils.send_message(chatid, f"I'm sorry, but since {who_submitted_the_response} has left the game you'll have to chose another winner")
+        utils.send_message(chatid, f"I'm sorry, but since {winner_user} has left the game you'll have to chose another winner")
     else:
-        query.edit_message_text(text=f"@{who_submitted_the_response.username} won!\n{formatted_game_call}",
+        query.edit_message_text(text=f"@{winner_user.username} won!\n{formatted_game_call}",
                             reply_markup=message_markup, parse_mode=telegram.ParseMode.HTML)
 
-    who_submitted_the_response.score += 1
+    winner_user.score += 1
     utils.send_message(chatid, f"Here's the current scoreboard:\n{game.get_formatted_scoreboard()}")
 
     if not game.new_round():
