@@ -75,7 +75,6 @@ def new_game(update, context) -> None:
 
 def start_game(update, context) -> None:
     chatid = update.message.chat_id
-    username = update.message.from_user.username
     chat_type = update.message.chat.type
     if not chat_type.endswith("group"):
         utils.send_message(chatid, "You can only start a game in a group!")
@@ -119,7 +118,6 @@ def actually_end_game(chatid) -> None:
 
 def end_game(update, context) -> None:
     chatid = update.message.chat_id
-    username = update.message.from_user.username
     chat_type = update.message.chat.type
     if not chat_type.endswith("group"):
         utils.send_message(chatid, "You can only end a game in a group!")
@@ -159,7 +157,6 @@ def join(update, context) -> None:
 
 def set_packs(update, context) -> None:
     chatid = update.message.chat_id
-    username = update.message.from_user.username
     chat_type = update.message.chat.type
     if not chat_type.endswith("group"):
         utils.send_message(chatid, "You can only set game packs in a group!")
@@ -299,7 +296,6 @@ def actually_leave(game: Game, user : User, left_group : bool):
 
 def status(update, context) -> None:
     chatid = update.message.chat_id
-    username = update.message.from_user.username
     chat_type = update.message.chat.type
     if not chat_type.endswith("group"):
         utils.send_message(chatid, "You can only get the game status in a group!")
@@ -312,7 +308,6 @@ def status(update, context) -> None:
 
 def set_rounds(update, context) -> None:
     chatid = update.message.chat_id
-    username = update.message.from_user.username
     chat_type = update.message.chat.type
     args = context.args
     if len(args) != 1:
@@ -336,7 +331,6 @@ def set_rounds(update, context) -> None:
 
 
 def inline_caps(update, context):
-    query = update.inline_query.query
     username = update.inline_query.from_user.username
 
     # Todo: eventually implement this in another way if search becomes too slow
