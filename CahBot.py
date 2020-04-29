@@ -108,7 +108,7 @@ def actually_end_game(chatid) -> None:
     if len(game.scoreboard()) == 0:
         utils.send_message(chatid, "Game ended! I don't know who won since everyone left :(")
         return
-    if game.is_started == False:
+    if game.is_started is False:
         utils.send_message(chatid, "Game ended! I don't who won since the game never started")
         return
     winner: User = game.scoreboard()[0]
