@@ -1,7 +1,7 @@
 import copy
 import logging
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 import telegram
 from telegram import InlineQueryResultArticle, InputTextMessageContent, InlineKeyboardButton, InlineKeyboardMarkup
