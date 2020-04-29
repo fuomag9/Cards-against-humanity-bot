@@ -67,7 +67,7 @@ def new_game(update, context) -> None:
         group_game.is_started = False
         groups_dict[chatid] = group_game
         utils.send_message(chatid,
-                           f"Game started! Use /join to enter the game and /set_packs to chose your packs and /start_game to start it!")
+                           "Game started! Use /join to enter the game and /set_packs to chose your packs and /start_game to start it!")
     else:
         utils.send_message(chatid, "A game is already in progress!")
         # Todo: eventually implement game timer and stopping
@@ -187,7 +187,7 @@ def set_packs(update, context) -> None:
         else:
             packs_keyboard.append([InlineKeyboardButton(pack_name, callback_data=f'{pack_name[:60]}_ppp')])
 
-    packs_keyboard.append([InlineKeyboardButton(">>>", callback_data=f'>>>_next_pack_page')])
+    packs_keyboard.append([InlineKeyboardButton(">>>", callback_data='>>>_next_pack_page')])
     reply_markup = InlineKeyboardMarkup(packs_keyboard)
 
     utils.send_message(chatid, "Click on the packs you'd like to use:", markup=reply_markup, html=True)
@@ -222,7 +222,7 @@ def set_packs_callback(update, context) -> None:
         else:
             packs_keyboard.append([InlineKeyboardButton(pack_name, callback_data=f'{pack_name[:60]}_ppp')])
 
-    packs_keyboard.append([InlineKeyboardButton(">>>", callback_data=f'>>>_next_pack_page')])
+    packs_keyboard.append([InlineKeyboardButton(">>>", callback_data='>>>_next_pack_page')])
     reply_markup = InlineKeyboardMarkup(packs_keyboard)
     query.edit_message_text(text=query.message.text, reply_markup=reply_markup)
 
@@ -249,7 +249,7 @@ def update_set_packs_keyboard_callback(update, context) -> None:
         else:
             packs_keyboard.append([InlineKeyboardButton(pack_name, callback_data=f'{pack_name[:60]}_ppp')])
 
-    packs_keyboard.append([InlineKeyboardButton(">>>", callback_data=f'>>>_next_pack_page')])
+    packs_keyboard.append([InlineKeyboardButton(">>>", callback_data='>>>_next_pack_page')])
     reply_markup = InlineKeyboardMarkup(packs_keyboard)
     query.edit_message_text(text=query.message.text, reply_markup=reply_markup)
 
@@ -293,7 +293,7 @@ def actually_leave(game: Game, user : User, left_group : bool):
                 game.round.delete_user_answers(user)
             #Todo: eventually check if the deep copy is actually needed or python doesn't make a reference when asigning self.judge (it probably does)
             if judge_copy == user:
-                utils.send_message(f"Since the judge quitted a new round will start!")
+                utils.send_message("Since the judge quitted a new round will start!")
     elif left_group:
         utils.send_message(game.chat_id, f"@{user.username} you have already left the game!")
 
@@ -443,7 +443,7 @@ def handle_response_chose_winner_callback(update, context):
     for user in list(filter(lambda x: x != game.judge, game.users)):
         user_answer_formatted = f"{user.username}: {', '.join(game.round.get_user_answers(user.username))}"
         buttons_list.append(
-            [InlineKeyboardButton(user_answer_formatted, callback_data=f'none')])
+            [InlineKeyboardButton(user_answer_formatted, callback_data='none')])
 
     message_markup = InlineKeyboardMarkup(buttons_list)
 
@@ -508,7 +508,7 @@ else:
     packs.load_from_pickle()
 
 if groups_file.is_file():
-    logging.info(f"Groups found from previous run, loading them...")
+    logging.info("Groups found from previous run, loading them...")
     groups_dict = backup_handler.get_groups()
     logging.info("Groups loaded!")
 else:
