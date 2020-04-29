@@ -10,7 +10,6 @@ from modules.MultiPack import MultiPack
 from modules.PackSelectionUI import PackSelectionUI
 from modules.Round import Round
 from modules.User import User
-import copy
 
 
 class Game:
@@ -143,7 +142,6 @@ class Game:
 
     @staticmethod
     def find_game_from_username(username, groups_dict: {}) -> Union[Game, False, None]:
-        inline_user: Union[User, None] = None
         game: Union[Game, None] = None
         game_count: int = 0
 

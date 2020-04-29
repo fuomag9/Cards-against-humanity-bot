@@ -9,7 +9,7 @@ from modules.Call import Call
 from modules.Pack import Pack
 
 
-class PacksInit():
+class PacksInit:
     def __init__(self, pack_json: Path):
         self.packs: List[Pack] = []
         self.pack_json: Path = pack_json

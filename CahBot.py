@@ -28,7 +28,7 @@ persistence = Utils.str2bool(argparse_args["persistence"])
 db_file = argparse_args["database_file"]
 self_file_folder = Path(__file__).resolve().parent
 
-#Todo: eventually research for potentially RCE in input data due to pickle
+# Todo: eventually research for potentially RCE in input data due to pickle
 packs_file = self_file_folder / "packs.pickle"
 groups_file = self_file_folder / "groups.pickle"
 
@@ -42,12 +42,11 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 utils = Utils(db_file, bot)
 packs = PacksInit(pack_json=packs_file)
 
-groups_dict : Dict[str, Game] = {}
+groups_dict: Dict[str, Game] = {}
 backup_handler = BackupHandler(groups_dict, groups_file)
 
 
-
-def help(update, context) -> None:
+def help_message(update, context) -> None:
     chatid = update.message.chat_id
     utils.send_message(chatid, """Hello""")
 
@@ -78,7 +77,7 @@ def start_game(update, context) -> None:
     chat_type = update.message.chat.type
     if not chat_type.endswith("group"):
         utils.send_message(chatid, "You can only start a game in a group!")
-    elif not chatid in groups_dict.keys():
+    elif chatid not in groups_dict.keys():
         utils.send_message(chatid, "There's no game to start, create one with /new_game")
     else:
         game: Game = groups_dict[chatid]
@@ -87,7 +86,7 @@ def start_game(update, context) -> None:
         else:
             list_of_packs = [packs.get_pack_by_truncatedstr_name(pack_name=pack_name) for pack_name in
                              game.pack_selection_ui.pack_names]
-            if list_of_packs == []:
+            if not list_of_packs:
                 utils.send_message(chatid, "You can't start a game with no pack selected!")
                 return
             elif len(game.users) == 1:
@@ -138,7 +137,7 @@ def join(update, context) -> None:
         game: Game = groups_dict.get(chatid)
         user = User(username)
         if user.username is None:
-            utils.send_message(chatid,"I'm sorry but you need to have an username to join a game")
+            utils.send_message(chatid, "I'm sorry but you need to have an username to join a game")
             return
         if game.is_started:
             utils.send_message(chatid, "You cannot join a game that has already started!")
@@ -163,16 +162,18 @@ def set_packs(update, context) -> None:
         return
     elif chatid in groups_dict.keys():
         game: Game = groups_dict[chatid]
+    else:
+        return
 
     if game.is_started:
         utils.send_message(chatid, "You cannot chose packs after a game has started!")
         return
 
     if game.pack_selection_ui.message_selection_id is not None:
-        utils.send_message(chatid,"You already have a pack selection interface open!")
+        utils.send_message(chatid, "You already have a pack selection interface open!")
         return
 
-    game.pack_selection_ui.message_selection_id = 0 # so it counts as "opened"
+    game.pack_selection_ui.message_selection_id = 0  # so it counts as "opened"
 
     min_index = game.pack_selection_ui.page_index * game.pack_selection_ui.items_per_page
     max_index = min_index + game.pack_selection_ui.items_per_page
@@ -191,13 +192,13 @@ def set_packs(update, context) -> None:
 
 
 def set_packs_callback(update, context) -> None:
-    query: str = update.callback_query
+    query = update.callback_query
     chatid = query.message.chat.id
     chat_type = query.message.chat.type
 
     if not chat_type.endswith("group"):
         return
-    if not chatid in groups_dict.keys():
+    if chatid not in groups_dict.keys():
         return
     game: Game = groups_dict[chatid]
 
@@ -225,13 +226,13 @@ def set_packs_callback(update, context) -> None:
 
 
 def update_set_packs_keyboard_callback(update, context) -> None:
-    query: str = update.callback_query
+    query = update.callback_query
     chatid = query.message.chat.id
     chat_type = query.message.chat.type
 
     if not chat_type.endswith("group"):
         return
-    if not chatid in groups_dict.keys():
+    if chatid not in groups_dict.keys():
         return
     game: Game = groups_dict[chatid]
     game.pack_selection_ui.page_index += 1
@@ -271,13 +272,13 @@ def handle_user_who_quitted_group(update, context) -> None:
     chat_type = update.message.chat.type
     if not chat_type.endswith("group"):
         return
-    user : User = User(username)
+    user: User = User(username)
     if chatid in groups_dict.keys():
         game: Game = groups_dict.get(chatid)
-        actually_leave(game, user, left_group= True)
+        actually_leave(game, user, left_group=True)
 
 
-def actually_leave(game: Game, user : User, left_group : bool):
+def actually_leave(game: Game, user: User, left_group: bool):
     if game.is_user_present(user):
         judge_copy = copy.deepcopy(game.judge)
         game.remove_user(user)
@@ -288,11 +289,12 @@ def actually_leave(game: Game, user : User, left_group : bool):
         else:
             if game.round:
                 game.round.delete_user_answers(user)
-            #Todo: eventually check if the deep copy is actually needed or python doesn't make a reference when asigning self.judge (it probably does)
+            # Todo: eventually check if the deep copy is actually needed or python doesn't make a reference when asigning self.judge (it probably does)
             if judge_copy == user:
                 utils.send_message("Since the judge quitted a new round will start!")
     elif left_group:
         utils.send_message(game.chat_id, f"@{user.username} you have already left the game!")
+
 
 def status(update, context) -> None:
     chatid = update.message.chat_id
@@ -321,11 +323,10 @@ def set_rounds(update, context) -> None:
         else:
             try:
                 number_of_rounds: int = int(args[0])
+                game.rounds = number_of_rounds
+                utils.send_message(chatid, f"The number of rounds has been changed to {number_of_rounds}")
             except ValueError:
                 utils.send_message(chatid, "You used the command in the wrong way, use it like /set_rounds 41")
-                return
-            game.rounds = number_of_rounds
-        utils.send_message(chatid, f"The number of rounds has been changed to {number_of_rounds}")
     else:
         utils.send_message(chatid, "There is no game running! Start one with /new_game")
 
@@ -347,12 +348,6 @@ def inline_caps(update, context):
     elif game.judge.username == username:
         return  # Todo eventually display that judge should not answer
 
-    # results = [InlineQueryResultArticle(
-    #     id=f"{inline_user.username}:{response}"[:60],
-    #     title=response,
-    #     input_message_content=InputTextMessageContent(response)
-    # ) for response in inline_user.responses]
-
     results = []
     for index, response in enumerate(inline_user.responses):
         results.append(
@@ -372,7 +367,7 @@ def handle_response_by_user(update, context):
     message_text = update.message.text
     if not chat_type.endswith("group"):
         return
-    if not chatid in groups_dict.keys():
+    if chatid not in groups_dict.keys():
         return
     game: Game = groups_dict[chatid]
     user: User = game.get_user(username)
@@ -420,13 +415,13 @@ def handle_response_by_user(update, context):
 
 
 def handle_response_chose_winner_callback(update, context):
-    query: str = update.callback_query
+    query = update.callback_query
     chat_type = query.message.chat.type
     chatid = query.message.chat.id
 
     if not chat_type.endswith("group"):
         return
-    if not chatid in groups_dict.keys():
+    if chatid not in groups_dict.keys():
         return
     game: Game = groups_dict[chatid]
     winner_user: User = game.get_user(query.data.split("_rcw")[0])
@@ -447,14 +442,14 @@ def handle_response_chose_winner_callback(update, context):
     for answer in winning_answer:
         formatted_game_call = formatted_game_call.replace("_", f"<b>{answer}</b>", 1)
 
-
     if not game.is_user_present(winner_user):
         query.edit_message_reply_markup(reply_markup=message_markup)
-        utils.send_message(chatid, f"I'm sorry, but since {winner_user} has left the game you'll have to chose another winner")
+        utils.send_message(chatid,
+                           f"I'm sorry, but since {winner_user} has left the game you'll have to chose another winner")
         return
     else:
         query.edit_message_text(text=f"@{winner_user.username} won!\n{formatted_game_call}",
-                            reply_markup=message_markup, parse_mode=telegram.ParseMode.HTML)
+                                reply_markup=message_markup, parse_mode=telegram.ParseMode.HTML)
 
     winner_user.score += 1
     utils.send_message(chatid, f"Here's the current scoreboard:\n{game.get_formatted_scoreboard()}")
@@ -470,15 +465,15 @@ def unknown(update, context):
     # Todo: fix this to not always happen (Do I even need this handler? lol)
 
 
-dispatcher.add_handler(CommandHandler(('start', 'help'), help))
-dispatcher.add_handler(CommandHandler(('new_game'), new_game))
-dispatcher.add_handler(CommandHandler(('start_game'), start_game))
-dispatcher.add_handler(CommandHandler(('end_game'), end_game))
-dispatcher.add_handler(CommandHandler(('join'), join))
-dispatcher.add_handler(CommandHandler(('leave'), leave))
-dispatcher.add_handler(CommandHandler(('status'), status))
-dispatcher.add_handler(CommandHandler(('set_rounds'), set_rounds))
-dispatcher.add_handler(CommandHandler(('set_packs'), set_packs))
+dispatcher.add_handler(CommandHandler(('start', 'help'), help_message))
+dispatcher.add_handler(CommandHandler('new_game', new_game))
+dispatcher.add_handler(CommandHandler('start_game', start_game))
+dispatcher.add_handler(CommandHandler('end_game', end_game))
+dispatcher.add_handler(CommandHandler('join', join))
+dispatcher.add_handler(CommandHandler('leave', leave))
+dispatcher.add_handler(CommandHandler('status', status))
+dispatcher.add_handler(CommandHandler('set_rounds', set_rounds))
+dispatcher.add_handler(CommandHandler('set_packs', set_packs))
 
 dispatcher.add_handler(CallbackQueryHandler(handle_response_chose_winner_callback, pattern='_rcw'))
 dispatcher.add_handler(CallbackQueryHandler(update_set_packs_keyboard_callback, pattern='>>>_next_pack_page'))
@@ -486,8 +481,6 @@ dispatcher.add_handler(CallbackQueryHandler(set_packs_callback, pattern='_ppp'))
 
 dispatcher.add_handler(MessageHandler(Filters.status_update.left_chat_member, handle_user_who_quitted_group))
 dispatcher.add_handler(MessageHandler(Filters.text, handle_response_by_user))
-
-
 
 dispatcher.add_handler(InlineQueryHandler(inline_caps))
 dispatcher.add_handler(MessageHandler(Filters.command, unknown))
@@ -511,7 +504,6 @@ else:
 if persistence:
     logging.info("Enabled persistence betweeen runs! Backups will happen every 60 seconds")
     backup_handler.start_backup_thread(60)
-
 
 logging.info('Starting telegram polling thread...')
 updater.start_polling()
