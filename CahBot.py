@@ -144,7 +144,7 @@ def join(update, context) -> None:
 
         found_game = game.find_game_from_username(user.username, groups_dict)
         if found_game is None:
-            utils.send_message("You cannot join more than one game at the same time for now, sorry :(")
+            utils.send_message(chatid, "You cannot join more than one game at the same time for now, sorry :(")
         elif found_game is False:
             game.add_user(user)
             utils.send_message(chatid, f"{user.username} joined the game!")
@@ -291,7 +291,7 @@ def actually_leave(game: Game, user: User, left_group: bool):
                 game.round.delete_user_answers(user)
             # Todo: eventually check if the deep copy is actually needed or python doesn't make a reference when asigning self.judge (it probably does)
             if judge_copy == user:
-                utils.send_message("Since the judge quitted a new round will start!")
+                utils.send_message(game.chat_id, "Since the judge left a new round will start!")
     elif left_group:
         utils.send_message(game.chat_id, f"@{user.username} you have already left the game!")
 
