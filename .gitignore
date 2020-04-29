@@ -238,3 +238,4 @@ $RECYCLE.BIN/
 .idea/sonarlint/
 database.db
 program_log.log
+groups.pickle

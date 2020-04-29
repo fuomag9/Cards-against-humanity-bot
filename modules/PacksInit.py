@@ -1,6 +1,7 @@
 import json
 import pickle
 from pathlib import Path
+from typing import List
 
 import requests
 
@@ -13,7 +14,7 @@ class PacksInit():
         self.packs: List[Pack] = []
         self.pack_json: Path = pack_json
 
-    def is_packs_file_empty(self) -> bool:
+    def check_for_packs_file(self) -> bool:
         return not self.pack_json.is_file()
 
     def delete_all_packs(self) -> bool:

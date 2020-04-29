@@ -1,17 +1,19 @@
+import copy
 import logging
 from pathlib import Path
+from typing import Dict
 
 import telegram
 from telegram import InlineQueryResultArticle, InputTextMessageContent, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, Updater, InlineQueryHandler, MessageHandler, Filters, CallbackQueryHandler
 
 from modules.Argparse_args import args as argparse_args
+from modules.BackupHandler import BackupHandler
 from modules.Game import Game
 from modules.MultiPack import MultiPack
 from modules.PacksInit import PacksInit
 from modules.User import User
 from modules.Utils import Utils
-import copy
 
 updater = Updater(token=argparse_args["key"], use_context=True)
 dispatcher = updater.dispatcher
@@ -22,9 +24,13 @@ bot_path = argparse_args["working_folder"]
 # admin_pw = argparse_args["admin_password"]
 logging_file = argparse_args["logging_file"]
 admin_mode = Utils.str2bool(argparse_args["admin_mode"])
+persistence = Utils.str2bool(argparse_args["persistence"])
 db_file = argparse_args["database_file"]
 self_file_folder = Path(__file__).resolve().parent
+
+#Todo: eventually research for potentially RCE in input data due to pickle
 packs_file = self_file_folder / "packs.pickle"
+groups_file = self_file_folder / "groups.pickle"
 
 logging_level = logging.INFO
 if not Utils.str2bool(argparse_args["enable_logging"]):
@@ -36,7 +42,9 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 utils = Utils(db_file, bot)
 packs = PacksInit(pack_json=packs_file)
 
-groups_dict = {}  # group chat_id : Game                type inference  ===   dict[str:Game]
+groups_dict : Dict[str, Game] = {}
+backup_handler = BackupHandler(groups_dict, groups_file)
+
 
 
 def help(update, context) -> None:
@@ -490,7 +498,7 @@ dispatcher.add_handler(MessageHandler(Filters.text, handle_response_by_user))
 dispatcher.add_handler(InlineQueryHandler(inline_caps))
 dispatcher.add_handler(MessageHandler(Filters.command, unknown))
 
-if packs.is_packs_file_empty():
+if packs.check_for_packs_file():
     logging.info(f"Downloading {50 * 12} packs, this may take a while...")
     packs.downloads_packs_data(50)
     logging.info(f"Saving packs to {packs_file}...")
@@ -498,6 +506,18 @@ if packs.is_packs_file_empty():
 else:
     logging.info("Packs found, loading them...")
     packs.load_from_pickle()
+
+if groups_file.is_file():
+    logging.info(f"Groups found from previous run, loading them...")
+    groups_dict = backup_handler.get_groups()
+    logging.info("Groups loaded!")
+else:
+    logging.info("No previous groups found, continuing...")
+
+if persistence:
+    logging.info("Enabled persistence betweeen runs! Backups will happen every 60 seconds")
+    backup_handler.start_backup_thread(60)
+
 
 logging.info('Starting telegram polling thread...')
 updater.start_polling()

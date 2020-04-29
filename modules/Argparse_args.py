@@ -35,6 +35,11 @@ ap.add_argument(
     default=True,
     help="Enable or disable logging, Default = True")
 ap.add_argument(
+    "--persistence",
+    required=False,
+    default=True,
+    help="Enable or disable persistence, Default = True")
+ap.add_argument(
     "--logging-file",
     required=False,
     type=str,
