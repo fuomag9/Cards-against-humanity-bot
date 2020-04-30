@@ -460,11 +460,6 @@ def handle_response_chose_winner_callback(update, context):
         utils.send_message(chatid, f"@{game.judge.username} is asking:\n{game.round.call.get_formatted_call()}")
 
 
-def unknown(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Sorry, I didn't understand that command.")
-    # Todo: fix this to not always happen (Do I even need this handler? lol)
-
-
 dispatcher.add_handler(CommandHandler(('start', 'help'), help_message))
 dispatcher.add_handler(CommandHandler('new_game', new_game))
 dispatcher.add_handler(CommandHandler('start_game', start_game))
@@ -483,7 +478,6 @@ dispatcher.add_handler(MessageHandler(Filters.status_update.left_chat_member, ha
 dispatcher.add_handler(MessageHandler(Filters.text, handle_response_by_user))
 
 dispatcher.add_handler(InlineQueryHandler(inline_caps))
-dispatcher.add_handler(MessageHandler(Filters.command, unknown))
 
 if packs.check_for_packs_file():
     logging.info(f"Downloading {50 * 12} packs, this may take a while...")
