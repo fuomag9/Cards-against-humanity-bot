@@ -361,7 +361,10 @@ def inline_caps(update, context):
 
 
 def handle_response_by_user(update, context):
-    chatid = update.message.chat_id
+    try:
+        chatid = update.message.chat_id
+    except AttributeError:
+        return
     username = update.message.from_user.username
     chat_type = update.message.chat.type
     message_text = update.message.text
