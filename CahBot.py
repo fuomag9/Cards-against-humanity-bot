@@ -141,6 +141,7 @@ def join(update, context) -> None:
             return
         if game.is_started:
             utils.send_message(chatid, "You cannot join a game that has already started!")
+            return
 
         found_game = game.find_game_from_username(user.username, groups_dict)
         if found_game is None:
