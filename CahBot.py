@@ -25,7 +25,6 @@ bot_path = argparse_args["working_folder"]
 logging_file = argparse_args["logging_file"]
 admin_mode = Utils.str2bool(argparse_args["admin_mode"])
 persistence = Utils.str2bool(argparse_args["persistence"])
-db_file = argparse_args["database_file"]
 self_file_folder = Path(__file__).resolve().parent
 
 # Todo: eventually research for potentially RCE in input data due to pickle
@@ -39,7 +38,7 @@ if not Utils.str2bool(argparse_args["enable_logging"]):
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging_level, filename=logging_file)
 
-utils = Utils(db_file, bot)
+utils = Utils(None, bot)
 packs = PacksInit(pack_json=packs_file)
 
 groups_dict: Dict[str, Game] = {}

@@ -13,12 +13,6 @@ ap.add_argument(
     default=os.getcwd(),
     help=f"Set the bot's working-folder. Default = {Path.cwd()}")
 ap.add_argument(
-    "-r",
-    "--remove",
-    required=False,
-    default=True,
-    help="Should the bot remove from the database anyone whom blocks it? Default = True")
-ap.add_argument(
     "--admin-password",
     required=False,
     type=str,
@@ -45,10 +39,4 @@ ap.add_argument(
     type=str,
     default=str(Path.cwd() / "program_log.log"),
     help=f"Logging file location, Default={Path.cwd() / 'program_log.log'}")
-ap.add_argument(
-    "--database-file",
-    required=False,
-    type=str,
-    default=str(Path.cwd() / "database.db"),
-    help=f"Logging file location, Default={Path.cwd() / 'database.db'}")
 args = vars(ap.parse_args())
