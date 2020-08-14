@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import random
-from typing import List, Union
+from typing import List, Union, Dict
 
 from multimethod import multimethod
 
@@ -80,13 +80,6 @@ class Game:
                 return user
         return None
 
-    @get_user.register
-    def get_user(self, searched_user: str) -> Union[User, None]:
-        for user in self.users:
-            if searched_user == user.username:
-                return user
-        return None
-
     def fill_user_responses(self, user: User):
         number_of_responses_needed: int = self.max_responses_per_user - len(user.responses)
         for _ in range(0, number_of_responses_needed):
@@ -142,6 +135,12 @@ class Game:
 
     @staticmethod
     def find_game_from_username(username, groups_dict: {}) -> Union[Game, False, None]:
+        """
+
+        :param username:
+        :param groups_dict:
+        :return: Game if a game is found, False if a game is not found or None if there are multiple games
+        """
         game: Union[Game, None] = None
         game_count: int = 0
 
@@ -155,3 +154,12 @@ class Game:
         if game_count == 0:
             return False
         return game
+
+    @staticmethod
+    def find_game_from_chatid(chatid, groups_dict: Dict) -> Union[Game, False]:
+        """
+        :param chatid:
+        :param groups_dict:
+        :return: Game if found else False
+        """
+        return groups_dict.get(chatid) if chatid in groups_dict.keys() else False
