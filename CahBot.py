@@ -120,7 +120,7 @@ def end_game(update, context) -> None:
     if not chat_type.endswith("group"):
         utils.send_message(chatid, "You can only end a game in a group!")
         return
-    if chatid in groups_dict.keys():
+    if chatid in groups_dict.keys() and game.is_started:
         actually_end_game(chatid)
     else:
         utils.send_message(chatid, "There's no active game to end!")
