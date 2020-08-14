@@ -57,12 +57,8 @@ def new_game(update, context) -> None:
     if utils.warning_if_not_group(chat_type, chatid, "create a new game"):
         return
     if chatid not in groups_dict.keys():
-        admin_user = User(username)
-        group_game = Game(chatid)
-        group_game.initiated_by = admin_user
-        group_game.add_user(admin_user)
-        group_game.is_started = False
-        groups_dict[chatid] = group_game
+        game = Game.create_game(username,chatid)
+        groups_dict[chatid] = game
         utils.send_message(chatid,
                            "Game started! Use /join to enter the game and /set_packs to chose your packs and /start_game to start it!")
     else:
@@ -97,6 +93,7 @@ def start_game(update, context) -> None:
             game.new_round()
             utils.send_message(chatid, f"{game.judge.username} is asking:\n{game.round.call.get_formatted_call()}")
             bot.delete_message(chatid, game.pack_selection_ui.message_selection_id)
+            game.pack_selection_ui.message_selection_id = None
 
 
 def actually_end_game(chatid) -> None:
@@ -120,10 +117,27 @@ def end_game(update, context) -> None:
         return
     game = Game.find_game_from_chatid(chatid, groups_dict)
     if game is False:
-        utils.send_message(chatid, "There's no active game to end!")
+        utils.send_message(chatid, "There's no game to end!")
     elif game.is_started:
         actually_end_game(chatid)
 
+def restart_game(update, context) -> None:
+    chatid = update.message.chat_id
+    chat_type = update.message.chat.type
+    if utils.warning_if_not_group(chat_type,chatid,"restart a game"):
+        return
+    game = Game.find_game_from_chatid(chatid, groups_dict)
+    if game is False:
+        utils.send_message(chatid, "There's no game to restart!")
+    else:
+        #//Todo: check for confirmation?
+        #Todo: ask if you want to keep the users
+        #Todo: ask if you want to keep the packs
+        game = Game.create_game(game.initiated_by, chatid)
+        groups_dict[chatid] = game
+        if game.pack_selection_ui.message_selection_id is not None:
+            bot.delete_message(chatid, game.pack_selection_ui.message_selection_id)
+        utils.send_message(chatid, "Game has been reset!")
 
 def join(update, context) -> None:
     chatid = update.message.chat_id
@@ -465,6 +479,7 @@ dispatcher.add_handler(CommandHandler(('start', 'help'), help_message))
 dispatcher.add_handler(CommandHandler('new_game', new_game))
 dispatcher.add_handler(CommandHandler('start_game', start_game))
 dispatcher.add_handler(CommandHandler('end_game', end_game))
+dispatcher.add_handler(CommandHandler('restart_game', restart_game))
 dispatcher.add_handler(CommandHandler('join', join))
 dispatcher.add_handler(CommandHandler('leave', leave))
 dispatcher.add_handler(CommandHandler('status', status))
