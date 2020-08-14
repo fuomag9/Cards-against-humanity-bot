@@ -153,3 +153,16 @@ class Utils:
             pass
         except Exception as e:
             Utils.handle_exception(e)
+
+    def warning_if_not_group(self, chat_type, chatid) -> bool:
+        """
+        :param chat_type:
+        :param chatid:
+        :param utils:
+        :return: True if not group warning was sent, else False
+        """
+        if not chat_type.endswith("group"):
+            self.send_message(chatid, "You can only end a game in a group!")
+            return True
+        else:
+            return False
