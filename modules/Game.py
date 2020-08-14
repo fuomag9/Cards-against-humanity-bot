@@ -37,6 +37,15 @@ class Game:
         self.pack_selection_ui = PackSelectionUI()
         self.can_remove_people_message = True
 
+    @staticmethod
+    def create_game(username, chatid) -> Game:
+        admin_user = User(username)
+        group_game = Game(chatid)
+        group_game.initiated_by = admin_user
+        group_game.add_user(admin_user)
+        group_game.is_started = False
+        return group_game
+
     def get_random_call(self) -> Union[Call, None]:
         try:
             chosen_call = random.choice(self.multipack.calls)
