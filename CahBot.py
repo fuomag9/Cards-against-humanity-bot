@@ -27,7 +27,7 @@ admin_mode = Utils.str2bool(argparse_args["admin_mode"])
 persistence = Utils.str2bool(argparse_args["persistence"])
 self_file_folder = Path(__file__).resolve().parent
 
-# Todo: eventually research for potentially RCE in input data due to pickle
+# Todo: eventually research for potential RCE in input data due to pickle
 packs_file = self_file_folder / "packs.pickle"
 groups_file = self_file_folder / "groups.pickle"
 
@@ -284,7 +284,7 @@ def actually_leave(game: Game, user: User, left_group: bool):
         game.remove_user(user)
 
         utils.send_message(game.chat_id, f"{user.username} left the game!")
-        if len(game.users) == 1:
+        if len(game.users) == 1 and game.is_started:
             actually_end_game(game.chat_id)
         else:
             if game.round:
