@@ -130,9 +130,6 @@ def restart_game(update, context) -> None:
     if game is False:
         utils.send_message(chatid, "There's no game to restart!")
     else:
-        #//Todo: check for confirmation?
-        #Todo: ask if you want to keep the users
-        #Todo: ask if you want to keep the packs
         game = Game.create_game(game.initiated_by, chatid)
         groups_dict[chatid] = game
         if game.pack_selection_ui.message_selection_id is not None:

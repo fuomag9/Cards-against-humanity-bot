@@ -239,3 +239,4 @@ $RECYCLE.BIN/
 database.db
 program_log.log
 groups.pickle
+.DS_Store

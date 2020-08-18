@@ -82,7 +82,6 @@ class Game:
     def remove_user(self, user: User):
         self.users.remove(user)
 
-    @multimethod
     def get_user(self, username) -> Union[User, None]:
         for user in self.users:
             if user.username == username:
