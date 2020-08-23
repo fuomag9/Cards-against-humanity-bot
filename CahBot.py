@@ -57,7 +57,7 @@ def new_game(update, context) -> None:
     if utils.warning_if_not_group(chat_type, chatid, "create a new game"):
         return
     if chatid not in groups_dict.keys():
-        game = Game.create_game(username,chatid)
+        game = Game.create_game(username, chatid)
         groups_dict[chatid] = game
         utils.send_message(chatid,
                            "Game started! Use /join to enter the game and /set_packs to chose your packs and /start_game to start it!")
@@ -113,7 +113,7 @@ def actually_end_game(chatid) -> None:
 def end_game(update, context) -> None:
     chatid = update.message.chat_id
     chat_type = update.message.chat.type
-    if utils.warning_if_not_group(chat_type,chatid,"end a game"):
+    if utils.warning_if_not_group(chat_type, chatid, "end a game"):
         return
     game = Game.find_game_from_chatid(chatid, groups_dict)
     if game is False:
@@ -121,10 +121,11 @@ def end_game(update, context) -> None:
     elif game.is_started:
         actually_end_game(chatid)
 
+
 def restart_game(update, context) -> None:
     chatid = update.message.chat_id
     chat_type = update.message.chat.type
-    if utils.warning_if_not_group(chat_type,chatid,"restart a game"):
+    if utils.warning_if_not_group(chat_type, chatid, "restart a game"):
         return
     game = Game.find_game_from_chatid(chatid, groups_dict)
     if game is False:
@@ -136,11 +137,12 @@ def restart_game(update, context) -> None:
             bot.delete_message(chatid, game.pack_selection_ui.message_selection_id)
         utils.send_message(chatid, "Game has been reset!")
 
+
 def join(update, context) -> None:
     chatid = update.message.chat_id
     username = update.message.from_user.username
     chat_type: str = update.message.chat.type
-    if utils.warning_if_not_group(chat_type,chatid,"join a game"):
+    if utils.warning_if_not_group(chat_type, chatid, "join a game"):
         return
     elif chatid in groups_dict.keys():
         game: Game = groups_dict.get(chatid)
@@ -323,7 +325,7 @@ def set_rounds(update, context) -> None:
     args = context.args
     if len(args) != 1:
         utils.send_message(chatid, "You used the command in the wrong way, use it like /set_rounds 41")
-    elif utils.warning_if_not_group(chat_type,chatid,"get set the number of rounds"):
+    elif utils.warning_if_not_group(chat_type, chatid, "get set the number of rounds"):
         return
     elif chatid in groups_dict.keys():
         game: Game = groups_dict[chatid]
