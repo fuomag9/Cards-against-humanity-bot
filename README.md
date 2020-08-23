@@ -1,1 +1,1 @@
-# Cards-agains-humanity-bot
+# Cards-against-humanity-bot
