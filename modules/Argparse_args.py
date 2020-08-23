@@ -1,5 +1,4 @@
 import argparse
-import os
 from pathlib import Path
 
 ap = argparse.ArgumentParser()
@@ -10,8 +9,8 @@ ap.add_argument(
     "--working-folder",
     required=False,
     type=str,
-    default=os.getcwd(),
-    help=f"Set the bot's working-folder. Default = {Path.cwd()}")
+    default=Path(Path.cwd()),
+    help=f"Set the bot's working-folder. Default = {Path(Path.cwd())}")
 ap.add_argument(
     "--admin-password",
     required=False,

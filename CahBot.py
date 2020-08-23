@@ -19,17 +19,16 @@ updater = Updater(token=argparse_args["key"], use_context=True)
 dispatcher = updater.dispatcher
 bot = updater.bot  # bot class instance
 
-bot_path = argparse_args["working_folder"]
+bot_path = Path(argparse_args["working_folder"])
 # auto_remove = Utils.str2bool(argparse_args["remove"])
 # admin_pw = argparse_args["admin_password"]
 logging_file = argparse_args["logging_file"]
 admin_mode = Utils.str2bool(argparse_args["admin_mode"])
 persistence = Utils.str2bool(argparse_args["persistence"])
-self_file_folder = Path(__file__).resolve().parent
 
 # Todo: eventually research for potential RCE in input data due to pickle
-packs_file = self_file_folder / "packs.pickle"
-groups_file = self_file_folder / "groups.pickle"
+packs_file = bot_path / "packs.pickle"
+groups_file = bot_path / "groups.pickle"
 
 logging_level = logging.INFO
 if not Utils.str2bool(argparse_args["enable_logging"]):
