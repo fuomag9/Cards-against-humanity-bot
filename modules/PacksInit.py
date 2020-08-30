@@ -48,7 +48,7 @@ class PacksInit:
     def get_pack_by_truncatedstr_name(self, pack_name: str, truncated_length: int = 60) -> Pack:
         for pack in self.packs:
             if pack.name[:truncated_length] == pack_name:
-                return pack  # Todo: eventually check for packs with the same name, but may not be an issue
+                return pack  # Todo: eventually check for packs with the same name, but it may not be an issue
 
     def downloads_packs_data(self, pages) -> None:
         if pages > 101:

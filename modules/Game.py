@@ -4,10 +4,12 @@ import random
 from typing import List, Union, Dict
 
 from multimethod import multimethod
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 
 from modules.Call import Call
 from modules.MultiPack import MultiPack
 from modules.PackSelectionUI import PackSelectionUI
+from modules.PacksInit import PacksInit
 from modules.Round import Round
 from modules.User import User
 
@@ -171,3 +173,22 @@ class Game:
         :return: Game if found else False
         """
         return groups_dict.get(chatid) if chatid in groups_dict.keys() else False
+
+    def generate_packs_markup(self, p: PacksInit) -> InlineKeyboardMarkup:
+        """
+        Generates inline keyboard markup from a PacksInit instance
+        :param p: PacksInit
+        :return: InlineKeyboardMarkup
+        """
+        min_index = self.pack_selection_ui.page_index * self.pack_selection_ui.items_per_page
+        max_index = min_index + self.pack_selection_ui.items_per_page
+        packs_to_use_in_keyboard: List[str] = p.get_packs_names()[min_index:max_index]
+        packs_keyboard = []
+        for pack_name in packs_to_use_in_keyboard:
+            if pack_name in self.pack_selection_ui.pack_names:
+                packs_keyboard.append([InlineKeyboardButton(f"{pack_name} ✔", callback_data=f'{pack_name[:60]}_ppp')])
+            else:
+                packs_keyboard.append([InlineKeyboardButton(pack_name, callback_data=f'{pack_name[:60]}_ppp')])
+        packs_keyboard.append([InlineKeyboardButton(">>>", callback_data='>>>_next_pack_page')])
+        reply_markup = InlineKeyboardMarkup(packs_keyboard)
+        return reply_markup

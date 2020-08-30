@@ -38,7 +38,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging_level, filename=logging_file)
 
 utils = Utils(None, bot)
-packs = PacksInit(pack_json=packs_file)
+packs: PacksInit = PacksInit(pack_json=packs_file)
 
 groups_dict: Dict[str, Game] = {}
 backup_handler = BackupHandler(groups_dict, groups_file)
@@ -185,18 +185,7 @@ def set_packs(update, context) -> None:
 
     game.pack_selection_ui.message_selection_id = 0  # so it counts as "opened"
 
-    min_index = game.pack_selection_ui.page_index * game.pack_selection_ui.items_per_page
-    max_index = min_index + game.pack_selection_ui.items_per_page
-    packs_to_use_in_keyboard: List[str] = packs.get_packs_names()[min_index:max_index]
-    packs_keyboard = []
-    for pack_name in packs_to_use_in_keyboard:
-        if pack_name in game.pack_selection_ui.pack_names:
-            packs_keyboard.append([InlineKeyboardButton(f"{pack_name} ✔", callback_data=f'{pack_name[:60]}_ppp')])
-        else:
-            packs_keyboard.append([InlineKeyboardButton(pack_name, callback_data=f'{pack_name[:60]}_ppp')])
-
-    packs_keyboard.append([InlineKeyboardButton(">>>", callback_data='>>>_next_pack_page')])
-    reply_markup = InlineKeyboardMarkup(packs_keyboard)
+    reply_markup = game.generate_packs_markup(packs)
 
     utils.send_message(chatid, "Click on the packs you'd like to use:", markup=reply_markup, html=True)
 
@@ -220,18 +209,7 @@ def set_packs_callback(update, context) -> None:
 
     game.pack_selection_ui.message_selection_id = query.message.message_id
 
-    min_index = game.pack_selection_ui.page_index * game.pack_selection_ui.items_per_page
-    max_index = min_index + game.pack_selection_ui.items_per_page
-    packs_to_use_in_keyboard: List[str] = packs.get_packs_names()[min_index:max_index]
-    packs_keyboard = []
-    for pack_name in packs_to_use_in_keyboard:
-        if pack_name in game.pack_selection_ui.pack_names:
-            packs_keyboard.append([InlineKeyboardButton(f"{pack_name} ✔", callback_data=f'{pack_name[:60]}_ppp')])
-        else:
-            packs_keyboard.append([InlineKeyboardButton(pack_name, callback_data=f'{pack_name[:60]}_ppp')])
-
-    packs_keyboard.append([InlineKeyboardButton(">>>", callback_data='>>>_next_pack_page')])
-    reply_markup = InlineKeyboardMarkup(packs_keyboard)
+    reply_markup = game.generate_packs_markup(packs)
     query.edit_message_text(text=query.message.text, reply_markup=reply_markup)
 
 
