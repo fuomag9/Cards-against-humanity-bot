@@ -1,4 +1,4 @@
 multimethod~=1.3
 requests~=2.23.0
--e git+https://github.com/fuomag9/python-telegram-bot/#egg=python-telegram-bot
+git+git://github.com/fuomag9/python-telegram-bot.git@9b6ab6b492b0bca11a034dda66ad107918d47532
 argparse~=1.4.0
