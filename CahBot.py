@@ -97,11 +97,13 @@ def start_game(update, context) -> None:
 
 def actually_end_game(chatid) -> None:
     game = groups_dict[chatid]
+    if game.is_started is False:
+        utils.send_message(chatid, "Game ended! I don't who won since the game never started :(")
+        del groups_dict[chatid]
+        return
     if len(game.scoreboard()) == 0:
         utils.send_message(chatid, "Game ended! I don't know who won since everyone left :(")
-        return
-    if game.is_started is False:
-        utils.send_message(chatid, "Game ended! I don't who won since the game never started")
+        del groups_dict[chatid]
         return
     winner: User = game.scoreboard()[0]
     utils.send_message(chatid, f"Game ended!\n@{winner.username} won with a score of {winner.score}")
@@ -273,6 +275,8 @@ def actually_leave(game: Game, user: User, left_group: bool):
 
         utils.send_message(game.chat_id, f"{user.username} left the game!")
         if len(game.users) == 1 and game.is_started:
+            actually_end_game(game.chat_id)
+        elif len(game.users) == 0 and not game.is_started:
             actually_end_game(game.chat_id)
         else:
             if game.round:
