@@ -240,3 +240,4 @@ database.db
 program_log.log
 groups.pickle
 .DS_Store
+.idea/vcs.xml

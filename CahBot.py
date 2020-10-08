@@ -119,7 +119,7 @@ def end_game(update, context) -> None:
     game = Game.find_game_from_chatid(chatid, groups_dict)
     if game is False:
         utils.send_message(chatid, "There's no game to end!")
-    elif game.is_started:
+    else:
         actually_end_game(chatid)
 
 
