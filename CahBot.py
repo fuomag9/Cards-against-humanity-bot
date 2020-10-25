@@ -43,10 +43,20 @@ packs: PacksInit = PacksInit(pack_json=packs_file)
 groups_dict: Dict[str, Game] = {}
 backup_handler = BackupHandler(groups_dict, groups_file)
 
+command_list = [("new_game", "Make a new game"), ("start_game", "Start the game"), ("end_game", "End the game"),
+                ("join", "Join the game"), ("leave", "Leave the game"), ("status", "See the scoreboard"),
+                ("set_rounds", "Set the number of rounds to play"), ("set_packs", "Set the packs to use in the game"),
+                ("restart_game", "Restart the game")]
+
+bot.set_my_commands(command_list)
+
 
 def help_message(update, context) -> None:
     chatid = update.message.chat_id
-    utils.send_message(chatid, """Hello""")
+    text = ""
+    for command in command_list:
+        text += f"/{command[0]} - {command[1]}\n"
+    utils.send_message(chatid, text, html=True)
 
 
 def new_game(update, context) -> None:
