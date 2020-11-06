@@ -15,7 +15,7 @@ from modules.PacksInit import PacksInit
 from modules.User import User
 from modules.Utils import Utils
 
-updater = Updater(token=argparse_args["key"], use_context=True)
+updater = Updater(token=argparse_args["key"])
 dispatcher = updater.dispatcher
 bot = updater.bot  # bot class instance
 
