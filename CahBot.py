@@ -385,12 +385,12 @@ def handle_response_by_user(update, context):
         if not game.round.is_answering_mode:
             return
         if not user.has_answered:
-            if game.can_remove_people_message:
-                try:
-                    bot.delete_message(chatid, update.message.message_id)
-                except telegram.error.BadRequest:
+            try:
+                bot.delete_message(chatid, update.message.message_id)
+            except telegram.error.BadRequest:
+                if game.can_remove_people_message:
                     utils.send_message(chatid,
-                                       "You need to set this bot as an admin to delete messages. You won't see this message anymore during this game and the change will be effective in the next one")
+                                       "You need to set this bot as an admin to delete messages. You won't see this message anymore during this game")
                     game.can_remove_people_message = False
 
             if game.round.call.replacements > 1:
