@@ -388,10 +388,10 @@ def handle_response_by_user(update, context):
             try:
                 bot.delete_message(chatid, update.message.message_id)
             except telegram.error.BadRequest:
-                if game.can_remove_people_message:
+                if not game.cannot_delete_message_sent:
                     utils.send_message(chatid,
                                        "You need to set this bot as an admin to delete messages. You won't see this message anymore during this game")
-                    game.can_remove_people_message = False
+                    game.cannot_delete_message_sent = True
 
             if game.round.call.replacements > 1:
                 utils.send_message(game.chat_id,

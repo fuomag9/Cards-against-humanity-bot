@@ -37,7 +37,7 @@ class Game:
         self.judge: User = initiated_by
         self.max_responses_per_user: int = max_responses_per_user
         self.pack_selection_ui = PackSelectionUI()
-        self.can_remove_people_message = True
+        self.cannot_delete_message_sent = False
 
     @staticmethod
     def create_game(username, chatid) -> Game:
