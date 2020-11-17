@@ -1,6 +1,7 @@
 import logging
 import sqlite3
 from pathlib import Path
+from typing import Optional
 
 import telegram
 from telegram.error import Unauthorized
@@ -84,7 +85,7 @@ class Utils:
     def drop_table(self, table_name: str) -> None:
         self.exec_query(f"""DROP TABLE IF EXISTS {table_name};""")
 
-    def send_message(self, chatid: str, messaggio: str, html: bool = False, markup=None) -> None:
+    def send_message(self, chatid: str, messaggio: str, html: bool = False, markup=None) -> Optional[telegram.Message]:
         """
         Sends a message to a telegram user and sends "typing" action
 
@@ -100,23 +101,23 @@ class Utils:
         try:
             bot.send_chat_action(chat_id=chatid, action="typing")
             if html and markup is not None:
-                bot.send_message(chat_id=chatid, text=messaggio,
-                                 parse_mode=telegram.ParseMode.HTML,
-                                 reply_markup=markup)
+                return bot.send_message(chat_id=chatid, text=messaggio,
+                                        parse_mode=telegram.ParseMode.HTML,
+                                        reply_markup=markup)
             elif html:
-                bot.send_message(chat_id=chatid, text=messaggio,
-                                 parse_mode=telegram.ParseMode.HTML)
+                return bot.send_message(chat_id=chatid, text=messaggio,
+                                        parse_mode=telegram.ParseMode.HTML)
             elif markup is not None:
-                bot.send_message(chat_id=chatid, text=messaggio,
-                                 reply_markup=markup)
+                return bot.send_message(chat_id=chatid, text=messaggio,
+                                        reply_markup=markup)
             else:
-                bot.send_message(chat_id=chatid, text=messaggio)
+                return bot.send_message(chat_id=chatid, text=messaggio)
         except Unauthorized:  # user blocked the bot
             pass
         except Exception as e:
             Utils.handle_exception(e)
 
-    def send_image(self, chatid: str, image, html: bool = False, markup=None, caption=None) -> None:
+    def send_image(self, chatid: str, image, html: bool = False, markup=None, caption=None) -> Optional[telegram.Message]:
         """
         Sends an image to a telegram user and sends "sending image" action
 
@@ -131,24 +132,26 @@ class Utils:
         try:
             bot.send_chat_action(chatid, action="upload_photo")
             if html and markup is not None and caption is not None:
-                bot.send_photo(chat_id=chatid, photo=image, parse_mode=telegram.ParseMode.HTML, reply_markup=markup,
-                               caption=caption)
+                return bot.send_photo(chat_id=chatid, photo=image, parse_mode=telegram.ParseMode.HTML,
+                                      reply_markup=markup,
+                                      caption=caption)
             elif html and markup is not None:
-                bot.send_photo(chat_id=chatid, photo=image, parse_mode=telegram.ParseMode.HTML, reply_markup=markup
-                               )
+                return bot.send_photo(chat_id=chatid, photo=image, parse_mode=telegram.ParseMode.HTML,
+                                      reply_markup=markup
+                                      )
             elif markup is not None and caption is not None:
-                bot.send_photo(chat_id=chatid, photo=image, reply_markup=markup,
-                               caption=caption)
+                return bot.send_photo(chat_id=chatid, photo=image, reply_markup=markup,
+                                      caption=caption)
             elif html and caption is not None:
-                bot.send_photo(chat_id=chatid, photo=image, parse_mode=telegram.ParseMode.HTML, caption=caption)
+                return bot.send_photo(chat_id=chatid, photo=image, parse_mode=telegram.ParseMode.HTML, caption=caption)
             elif html:
-                bot.send_photo(chat_id=chatid, photo=image, parse_mode=telegram.ParseMode.HTML)
+                return bot.send_photo(chat_id=chatid, photo=image, parse_mode=telegram.ParseMode.HTML)
             elif markup is not None:
-                bot.send_photo(chat_id=chatid, photo=image, reply_markup=markup)
+                return bot.send_photo(chat_id=chatid, photo=image, reply_markup=markup)
             elif caption is not None:
-                bot.send_photo(chat_id=chatid, photo=image, caption=caption)
+                return bot.send_photo(chat_id=chatid, photo=image, caption=caption)
             else:
-                bot.send_photo(chat_id=chatid, photo=image)
+                return bot.send_photo(chat_id=chatid, photo=image)
         except Unauthorized:  # user blocked the bot
             pass
         except Exception as e:
