@@ -100,9 +100,10 @@ def start_game(update, context) -> None:
             game.multipack_backup = copy.deepcopy(game.multipack)
             utils.send_message(chatid, "Game started!")
             game.new_round()
-            utils.send_message(chatid, f"{game.judge.username} is asking:\n{game.round.call.get_formatted_call()}")
-            bot.delete_message(chatid, game.pack_selection_ui.message_selection_id)
-            game.pack_selection_ui.message_selection_id = None
+            game.round.choose_winner_message = utils.send_message(chatid,
+                                                                  f"{game.judge.username} is asking:\n{game.round.call.get_formatted_call()}")
+            game.pack_selection_ui.message.delete()
+            game.pack_selection_ui.message = None
 
 
 def actually_end_game(chatid) -> None:
@@ -144,8 +145,8 @@ def restart_game(update, context) -> None:
     else:
         game = Game.create_game(game.initiated_by, chatid)
         groups_dict[chatid] = game
-        if game.pack_selection_ui.message_selection_id is not None:
-            bot.delete_message(chatid, game.pack_selection_ui.message_selection_id)
+        if game.pack_selection_ui.message is not None:
+            bot.delete_message(chatid, game.pack_selection_ui.message)
         utils.send_message(chatid, "Game has been reset!")
 
 
@@ -191,15 +192,13 @@ def set_packs(update, context) -> None:
         utils.send_message(chatid, "You cannot chose packs after a game has started!")
         return
 
-    if game.pack_selection_ui.message_selection_id is not None:
+    if game.pack_selection_ui.message is not None:
         utils.send_message(chatid, "You already have a pack selection interface open!")
         return
 
-    game.pack_selection_ui.message_selection_id = 0  # so it counts as "opened"
-
     reply_markup = game.generate_packs_markup(packs)
-
-    utils.send_message(chatid, "Click on the packs you'd like to use:", markup=reply_markup, html=True)
+    game.pack_selection_ui.message = utils.send_message(chatid, "Click on the packs you'd like to use:",
+                                                        markup=reply_markup, html=True)
 
 
 def set_packs_callback(update, context) -> None:
@@ -218,8 +217,6 @@ def set_packs_callback(update, context) -> None:
         game.pack_selection_ui.pack_names.append(selected_pack)
     else:
         game.pack_selection_ui.pack_names.remove(selected_pack)
-
-    game.pack_selection_ui.message_selection_id = query.message.message_id
 
     reply_markup = game.generate_packs_markup(packs)
     query.edit_message_text(text=query.message.text, reply_markup=reply_markup)
@@ -414,9 +411,9 @@ def handle_response_by_user(update, context):
                         [InlineKeyboardButton(user_answer_formatted, callback_data=f'{user.username}_rcw')])
 
                 message_markup = InlineKeyboardMarkup(buttons_list)
-                utils.send_message(game.chat_id,
-                                   f"Everyone has answered!\n@{game.judge.username} you need to chose the best answer.\n{game.round.call.get_formatted_call()}",
-                                   markup=message_markup)
+                game.round.choose_winner_message = utils.send_message(game.chat_id,
+                                                                      f"Everyone has answered!\n@{game.judge.username} you need to chose the best answer.\n{game.round.call.get_formatted_call()}",
+                                                                      markup=message_markup)
 
 
 def handle_response_chose_winner_callback(update, context):
@@ -453,8 +450,9 @@ def handle_response_chose_winner_callback(update, context):
                            f"I'm sorry, but since {winner_user} has left the game you'll have to chose another winner")
         return
     else:
-        query.edit_message_text(text=f"@{winner_user.username} won!\n{formatted_game_call}",
+        query.edit_message_text(text=f"{winner_user.username} won!\n{formatted_game_call}",
                                 reply_markup=message_markup, parse_mode=telegram.ParseMode.HTML)
+        game.round.choose_winner_message.reply_text(text=f"@{winner_user.username} won!")
 
     winner_user.score += 1
     utils.send_message(chatid, f"Here's the current scoreboard:\n{game.get_formatted_scoreboard()}")

@@ -1,5 +1,6 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 
+import telegram
 from multimethod import multimethod
 
 from modules.Call import Call
@@ -12,6 +13,7 @@ class Round:
         self.is_judging_mode = False
         self.call: Call = call
         self.answers: Dict[str: List[str]] = {}  # [username : List[answer]]
+        self.choose_winner_message: Optional[telegram.Message] = None
 
     def get_user_answers(self, username: str) -> List[str]:
         return self.answers[username]

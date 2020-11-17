@@ -1,4 +1,6 @@
-from typing import List, Union
+from typing import List, Union, Optional
+
+import telegram
 
 
 class PackSelectionUI:
@@ -6,4 +8,4 @@ class PackSelectionUI:
         self.page_index: int = 0
         self.items_per_page: int = items_per_page
         self.pack_names: List[str] = []
-        self.message_selection_id: Union[int, None] = None
+        self.message: Optional[telegram.Message] = None
