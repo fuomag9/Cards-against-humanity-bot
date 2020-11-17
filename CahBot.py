@@ -333,7 +333,7 @@ def set_rounds(update, context) -> None:
         utils.send_message(chatid, "There is no game running! Start one with /new_game")
 
 
-def inline_caps(update, context):
+def responses_interface(update, context):
     username = update.inline_query.from_user.username
 
     # Todo: eventually implement this in another way if search becomes too slow
@@ -483,7 +483,7 @@ dispatcher.add_handler(CallbackQueryHandler(set_packs_callback, pattern='_ppp'))
 dispatcher.add_handler(MessageHandler(Filters.status_update.left_chat_member, handle_user_who_quitted_group))
 dispatcher.add_handler(MessageHandler(Filters.text, handle_response_by_user))
 
-dispatcher.add_handler(InlineQueryHandler(inline_caps))
+dispatcher.add_handler(InlineQueryHandler(responses_interface))
 
 if packs.check_for_packs_file():
     logging.info(f"Downloading {50 * 12} packs, this may take a while...")
