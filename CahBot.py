@@ -392,12 +392,13 @@ def handle_response_by_user(update, context):
 
             if game.round.call.replacements > 1:
                 utils.send_message(game.chat_id,
-                                   f"{user.username} answered {user.completition_answers + 1} of {game.round.call.replacements}")
+                                   f"{user.username} answered {user.completition_answers + 1} of {game.round.call.replacements}",
+                                   disable_notification=True)
             user.completition_answers += 1
             user.responses.remove(message_text)
             game.round.answers[user.username].append(message_text)
             if user.completition_answers == game.round.call.replacements:
-                utils.send_message(game.chat_id, f"{user.username} has finished answering!")
+                utils.send_message(game.chat_id, f"{user.username} has finished answering!", disable_notification=True)
                 user.has_answered = True
 
             if game.have_all_users_answered():
