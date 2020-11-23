@@ -118,7 +118,8 @@ def actually_end_game(chatid) -> None:
         return
     winner: User = game.scoreboard()[0]
     utils.send_message(chatid, f"Game ended!\n@{winner.username} won with a score of {winner.score}")
-    utils.send_message(chatid, f"Here's the full scoreboard:\n{game.get_formatted_scoreboard()}")
+    utils.send_message(chatid, f"Here's the full scoreboard:\n{game.get_formatted_scoreboard()}",
+                       disable_notification=True)
     del groups_dict[chatid]
 
 
@@ -456,7 +457,8 @@ def handle_response_chose_winner_callback(update, context):
         game.round.choose_winner_message.reply_text(text=f"@{winner_user.username} won!")
 
     winner_user.score += 1
-    utils.send_message(chatid, f"Here's the current scoreboard:\n{game.get_formatted_scoreboard()}")
+    utils.send_message(chatid, f"Here's the current scoreboard:\n{game.get_formatted_scoreboard()}",
+                       disable_notification=True)
 
     if not game.new_round():
         actually_end_game(chatid)
