@@ -85,7 +85,8 @@ class Utils:
     def drop_table(self, table_name: str) -> None:
         self.exec_query(f"""DROP TABLE IF EXISTS {table_name};""")
 
-    def send_message(self, chatid: str, messaggio: str, html: bool = False, markup=None) -> Optional[telegram.Message]:
+    def send_message(self, chatid: str, messaggio: str, html: bool = False, markup=None,
+                     disable_notification: bool = None) -> Optional[telegram.Message]:
         """
         Sends a message to a telegram user and sends "typing" action
 
@@ -94,24 +95,16 @@ class Utils:
         :param messaggio: The message who the user will receive
         :param html: Enable html markdown parsing in the message
         :param markup: The reply_markup to use when sending the message
+        :param disable_notification: Disable message notification
         """
 
         bot = self.bot_updater
 
         try:
             bot.send_chat_action(chat_id=chatid, action="typing")
-            if html and markup is not None:
-                return bot.send_message(chat_id=chatid, text=messaggio,
-                                        parse_mode=telegram.ParseMode.HTML,
-                                        reply_markup=markup)
-            elif html:
-                return bot.send_message(chat_id=chatid, text=messaggio,
-                                        parse_mode=telegram.ParseMode.HTML)
-            elif markup is not None:
-                return bot.send_message(chat_id=chatid, text=messaggio,
-                                        reply_markup=markup)
-            else:
-                return bot.send_message(chat_id=chatid, text=messaggio)
+            return bot.send_message(chat_id=chatid, text=messaggio,
+                                    parse_mode=telegram.ParseMode.HTML if html else None,
+                                    reply_markup=markup, disable_notification=disable_notification)
         except Unauthorized:  # user blocked the bot
             pass
         except Exception as e:
