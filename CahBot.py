@@ -69,7 +69,7 @@ def new_game(update, context) -> None:
         game = Game.create_game(username, chatid)
         groups_dict[chatid] = game
         utils.send_message(chatid,
-                           "Game started! Use /join to enter the game and /set_packs to chose your packs and /start_game to start it!")
+                           f"Game started with {game.rounds} rounds! Use /join to enter the game and /set_packs to chose your packs and /start_game to start it!")
     else:
         utils.send_message(chatid, "A game is already in progress!")
         # Todo: eventually implement game timer and stopping
