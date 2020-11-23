@@ -51,6 +51,7 @@ command_list = [("new_game", "Make a new game"), ("start_game", "Start the game"
 bot.set_my_commands(command_list)
 
 
+# noinspection PyUnusedLocal
 def help_message(update, context) -> None:
     chatid = update.message.chat_id
     text = ""
@@ -59,14 +60,16 @@ def help_message(update, context) -> None:
     utils.send_message(chatid, text, html=True)
 
 
+# noinspection PyUnusedLocal
 def new_game(update, context) -> None:
     chatid = update.message.chat_id
     username = update.message.from_user.username
     chat_type = update.message.chat.type
+    user_id = str(update.message.from_user.id)
     if utils.warning_if_not_group(chat_type, chatid, "create a new game"):
         return
     if chatid not in groups_dict.keys():
-        game = Game.create_game(username, chatid)
+        game = Game.create_game(User(username, user_id), chatid)
         groups_dict[chatid] = game
         utils.send_message(chatid,
                            f"Game started with {game.rounds} rounds! Use /join to enter the game and /set_packs to chose your packs and /start_game to start it!")
@@ -75,6 +78,7 @@ def new_game(update, context) -> None:
         # Todo: eventually implement game timer and stopping
 
 
+# noinspection PyUnusedLocal
 def start_game(update, context) -> None:
     chatid = update.message.chat_id
     chat_type = update.message.chat.type
@@ -118,11 +122,12 @@ def actually_end_game(chatid) -> None:
         return
     winner: User = game.scoreboard()[0]
     utils.send_message(chatid, f"Game ended!\n@{winner.username} won with a score of {winner.score}")
-    utils.send_message(chatid, f"Here's the full scoreboard:\n{game.get_formatted_scoreboard()}",
+    utils.send_message(chatid, f"Here's the final scoreboard:\n{game.get_formatted_scoreboard()}",
                        disable_notification=True)
     del groups_dict[chatid]
 
 
+# noinspection PyUnusedLocal
 def end_game(update, context) -> None:
     chatid = update.message.chat_id
     chat_type = update.message.chat.type
@@ -135,6 +140,7 @@ def end_game(update, context) -> None:
         actually_end_game(chatid)
 
 
+# noinspection PyUnusedLocal
 def restart_game(update, context) -> None:
     chatid = update.message.chat_id
     chat_type = update.message.chat.type
@@ -144,22 +150,27 @@ def restart_game(update, context) -> None:
     if game is False:
         utils.send_message(chatid, "There's no game to restart!")
     else:
-        game = Game.create_game(game.initiated_by, chatid)
+        game = Game.create_game(User(game.started_by.username, game.started_by.user_id), chatid)
         groups_dict[chatid] = game
         if game.pack_selection_ui.message is not None:
             bot.delete_message(chatid, game.pack_selection_ui.message)
         utils.send_message(chatid, "Game has been reset!")
+        game.new_round()
+        game.round.choose_winner_message = utils.send_message(chatid,
+                                                              f"{game.judge.username} is asking:\n{game.round.call.get_formatted_call()}")
 
 
+# noinspection PyUnusedLocal
 def join(update, context) -> None:
     chatid = update.message.chat_id
     username = update.message.from_user.username
+    user_id = str(update.message.from_user.id)
     chat_type: str = update.message.chat.type
     if utils.warning_if_not_group(chat_type, chatid, "join a game"):
         return
     elif chatid in groups_dict.keys():
         game: Game = groups_dict.get(chatid)
-        user = User(username)
+        user = User(username, user_id)
         if user.username is None:
             utils.send_message(chatid, "I'm sorry but you need to have an username to join a game")
             return
@@ -167,7 +178,7 @@ def join(update, context) -> None:
             utils.send_message(chatid, "You cannot join a game that has already started!")
             return
 
-        found_game = game.find_game_from_username(user.username, groups_dict)
+        found_game = game.find_game_from_userid(user.user_id, groups_dict)
         if found_game is None:
             utils.send_message(chatid, "You cannot join more than one game at the same time for now, sorry :(")
         elif found_game is False:
@@ -179,6 +190,7 @@ def join(update, context) -> None:
         utils.send_message(chatid, "There is no game running! Start one with /new_game")
 
 
+# noinspection PyUnusedLocal
 def set_packs(update, context) -> None:
     chatid = update.message.chat_id
     chat_type = update.message.chat.type
@@ -202,6 +214,7 @@ def set_packs(update, context) -> None:
                                                         markup=reply_markup, html=True)
 
 
+# noinspection PyUnusedLocal
 def set_packs_callback(update, context) -> None:
     query = update.callback_query
     chatid = query.message.chat.id
@@ -223,6 +236,7 @@ def set_packs_callback(update, context) -> None:
     query.edit_message_text(text=query.message.text, reply_markup=reply_markup)
 
 
+# noinspection PyUnusedLocal
 def update_set_packs_keyboard_callback(update, context) -> None:
     query = update.callback_query
     chatid = query.message.chat.id
@@ -250,27 +264,31 @@ def update_set_packs_keyboard_callback(update, context) -> None:
     query.edit_message_text(text=query.message.text, reply_markup=reply_markup)
 
 
+# noinspection PyUnusedLocal
 def leave(update, context) -> None:
     chatid = update.message.chat_id
     username = update.message.from_user.username
     chat_type = update.message.chat.type
+    user_id = str(update.message.from_user.id)
     if utils.warning_if_not_group(chat_type, chatid, "leave a game"):
         return
     elif chatid in groups_dict.keys():
         game: Game = groups_dict.get(chatid)
-        user = User(username)
+        user = User(username, user_id)
         actually_leave(game, user, left_group=False)
     else:
         utils.send_message(chatid, "There is no game running! Start one with /new_game")
 
 
+# noinspection PyUnusedLocal
 def handle_user_who_quitted_group(update, context) -> None:
     chatid = update.message.chat_id
     username = update.message.from_user.username
     chat_type = update.message.chat.type
+    user_id = str(update.message.from_user.id)
     if not chat_type.endswith("group"):
         return
-    user: User = User(username)
+    user: User = User(username, user_id)
     if chatid in groups_dict.keys():
         game: Game = groups_dict.get(chatid)
         actually_leave(game, user, left_group=True)
@@ -296,6 +314,7 @@ def actually_leave(game: Game, user: User, left_group: bool):
         utils.send_message(game.chat_id, f"@{user.username} you have already left the game!")
 
 
+# noinspection PyUnusedLocal
 def status(update, context) -> None:
     chatid = update.message.chat_id
     chat_type = update.message.chat.type
@@ -332,12 +351,12 @@ def set_rounds(update, context) -> None:
 
 
 def responses_interface(update, context):
-    username = update.inline_query.from_user.username
+    user_id = str(update.inline_query.from_user.id)
 
     # Todo: eventually implement this in another way if search becomes too slow
-    game = Game.find_game_from_username(username, groups_dict)
+    game = Game.find_game_from_userid(user_id, groups_dict)
     if isinstance(game, Game):
-        inline_user = game.get_user(username)
+        inline_user = game.get_user(user_id)
     else:
         return
 
@@ -345,7 +364,7 @@ def responses_interface(update, context):
         return  # Todo eventually display no game in progress status or user not in game or something similar
     elif game.is_started is False:
         return  # Todo eventually display game still in join mode status
-    elif game.judge.username == username:
+    elif game.judge.user_id == user_id:
         return  # Todo eventually display that judge should not answer
 
     results = []
@@ -360,12 +379,13 @@ def responses_interface(update, context):
     context.bot.answer_inline_query(update.inline_query.id, results=results, cache_time=2, is_personal=True)
 
 
+# noinspection PyUnusedLocal
 def handle_response_by_user(update, context):
     try:
         chatid = update.message.chat_id
     except AttributeError:
         return
-    username = update.message.from_user.username
+    user_id = str(update.message.from_user.id)
     chat_type = update.message.chat.type
     message_text = update.message.text
     if not chat_type.endswith("group"):
@@ -373,7 +393,7 @@ def handle_response_by_user(update, context):
     if chatid not in groups_dict.keys():
         return
     game: Game = groups_dict[chatid]
-    user: User = game.get_user(username)
+    user: User = game.get_user(user_id)
     if user is None:
         return
 
@@ -397,7 +417,7 @@ def handle_response_by_user(update, context):
                                    disable_notification=True)
             user.completition_answers += 1
             user.responses.remove(message_text)
-            game.round.answers[user.username].append(message_text)
+            game.round.get_answers(user).append(message_text)
             if user.completition_answers == game.round.call.replacements:
                 utils.send_message(game.chat_id, f"{user.username} has finished answering!", disable_notification=True)
                 user.has_answered = True
@@ -408,9 +428,9 @@ def handle_response_by_user(update, context):
 
                 buttons_list = []
                 for user in list(filter(lambda x: x != game.judge, game.users)):
-                    user_answer_formatted = f"{', '.join(game.round.get_user_answers(user.username))}"
+                    user_answer_formatted = f"{', '.join(game.round.get_user_answers(user))}"
                     buttons_list.append(
-                        [InlineKeyboardButton(user_answer_formatted, callback_data=f'{user.username}_rcw')])
+                        [InlineKeyboardButton(user_answer_formatted, callback_data=f'{user.user_id}_rcw')])
 
                 message_markup = InlineKeyboardMarkup(buttons_list)
                 game.round.choose_winner_message = utils.send_message(game.chat_id,
@@ -418,6 +438,7 @@ def handle_response_by_user(update, context):
                                                                       markup=message_markup)
 
 
+# noinspection PyUnusedLocal
 def handle_response_chose_winner_callback(update, context):
     query = update.callback_query
     chat_type = query.message.chat.type
@@ -434,7 +455,7 @@ def handle_response_chose_winner_callback(update, context):
 
     buttons_list = []
     for user in list(filter(lambda x: x != game.judge, game.users)):
-        user_answer_formatted = f"{user.username}: {', '.join(game.round.get_user_answers(user.username))}"
+        user_answer_formatted = f"{user.username}: {', '.join(game.round.get_user_answers(user))}"
         buttons_list.append(
             [InlineKeyboardButton(user_answer_formatted, callback_data='none')])
 
@@ -442,7 +463,7 @@ def handle_response_chose_winner_callback(update, context):
 
     formatted_game_call: str = game.round.call.get_formatted_call()
 
-    winning_answer = game.round.answers[winner_user.username]
+    winning_answer = game.round.get_answers(winner_user)
     for answer in winning_answer:
         formatted_game_call = formatted_game_call.replace("_", f"<b>{answer}</b>", 1)
 
@@ -467,6 +488,7 @@ def handle_response_chose_winner_callback(update, context):
         utils.send_message(chatid, f"@{game.judge.username} is asking:\n{game.round.call.get_formatted_call()}")
 
 
+# noinspection PyTypeChecker
 dispatcher.add_handler(CommandHandler(('start', 'help'), help_message))
 dispatcher.add_handler(CommandHandler('new_game', new_game))
 dispatcher.add_handler(CommandHandler('start_game', start_game))

@@ -17,6 +17,7 @@ class PacksInit:
     def check_for_packs_file(self) -> bool:
         return not self.pack_json.is_file()
 
+    # noinspection PyBroadException
     def delete_all_packs(self) -> bool:
         if self.pack_json.is_file():
             try:

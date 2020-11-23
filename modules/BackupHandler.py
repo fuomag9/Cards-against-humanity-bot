@@ -1,13 +1,13 @@
-import time
-from pathlib import Path
-from typing import Dict, Union
 import pickle
 import threading
+import time
+from pathlib import Path
+from typing import Dict, Optional
 
 
 class BackupHandler:
     def __init__(self, groups_dict: Dict, backup_file: Path):
-        self.thread: Union[threading.Thread, None] = None
+        self.thread: Optional[threading.Thread] = None
         self.__should_thread_run = True
         self.client = None
         self.backup_file = backup_file

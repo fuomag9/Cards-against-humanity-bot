@@ -1,11 +1,11 @@
 import random
-from typing import List, Union
+from typing import List, Optional
 
 from modules.Call import Call
 
 
 class Pack:
-    def __init__(self, name: Union[str, None], calls: List[Call], responses: List[str], is_nsfw=False):
+    def __init__(self, name: Optional[str], calls: List[Call], responses: List[str], is_nsfw=False):
         self.name: str = name
         self.calls: List[Call] = calls
         self.responses: List[str] = responses
