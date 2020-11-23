@@ -37,7 +37,7 @@ if not Utils.str2bool(argparse_args["enable_logging"]):
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging_level, filename=logging_file)
 
-utils = Utils(None, bot)
+utils = Utils(bot)
 packs: PacksInit = PacksInit(pack_json=packs_file)
 
 groups_dict: Dict[str, Game] = {}

@@ -1,6 +1,4 @@
 import logging
-import sqlite3
-from pathlib import Path
 from typing import Optional
 
 import telegram
@@ -8,12 +6,11 @@ from telegram.error import Unauthorized
 
 
 class Utils:
-    def __init__(self, db_file=str(Path.cwd()), bot_updater=None):
+    def __init__(self, bot_updater=None):
         """
-        :param db_file: database file
         :type bot_updater: updater.bot of python-telegram-bot
         """
-        self.db_file = db_file
+
         self.bot_updater = bot_updater
 
     @staticmethod
@@ -34,56 +31,6 @@ class Utils:
             return False
         else:
             raise ValueError('Boolean value expected.')
-
-    def exec_query(self, query: str) -> None:
-        """Executes a SQL query
-
-        :param query: The SQL query to execute
-
-        """
-
-        # Open database connection
-        db = sqlite3.connect(self.db_file)
-        # prepare a cursor object using cursor() method
-        cursor = db.cursor()
-        # Prepare SQL query to INSERT a record into the database.
-        try:
-            # Execute the SQL command
-            cursor.execute(query)
-            # Commit your changes in the database
-            db.commit()
-        except Exception as e:
-            # Rollback in case there is any error
-            self.handle_exception(e)
-            db.rollback()
-        # disconnect from server
-        db.close()
-
-    def retrieve_query_results(self, query: str) -> list:
-        """
-        Returns a list containing the SQL query results
-
-        :param query: The SQL query to execute
-        :rtype: list
-        :return: A list containing the query results
-        """
-        db = sqlite3.connect(self.db_file)
-        cursor = db.cursor()
-        try:
-            cursor.execute(query)
-            results = cursor.fetchall()
-            return results
-        except Exception as e:
-            self.handle_exception(e)
-            return []  # return empty list
-        finally:
-            db.close()
-
-    def get_all_table_names(self) -> list:
-        return self.retrieve_query_results("""SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;""")
-
-    def drop_table(self, table_name: str) -> None:
-        self.exec_query(f"""DROP TABLE IF EXISTS {table_name};""")
 
     def send_message(self, chatid: str, messaggio: str, html: bool = False, markup=None,
                      disable_notification: bool = None) -> Optional[telegram.Message]:
@@ -110,7 +57,8 @@ class Utils:
         except Exception as e:
             Utils.handle_exception(e)
 
-    def send_image(self, chatid: str, image, html: bool = False, markup=None, caption=None) -> Optional[telegram.Message]:
+    def send_image(self, chatid: str, image, html: bool = False, markup=None, caption=None) -> Optional[
+        telegram.Message]:
         """
         Sends an image to a telegram user and sends "sending image" action
 
