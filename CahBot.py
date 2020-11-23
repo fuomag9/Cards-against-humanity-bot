@@ -457,7 +457,8 @@ def handle_response_chose_winner_callback(update, context):
         game.round.choose_winner_message.reply_text(text=f"@{winner_user.username} won!")
 
     winner_user.score += 1
-    utils.send_message(chatid, f"Here's the current scoreboard:\n{game.get_formatted_scoreboard()}",
+    utils.send_message(chatid,
+                       f"Here's the current scoreboard:\n{game.get_formatted_scoreboard()}\n{game.remaining_rounds} rounds remaining",
                        disable_notification=True)
 
     if not game.new_round():
