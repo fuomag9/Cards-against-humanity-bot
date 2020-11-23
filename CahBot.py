@@ -322,7 +322,7 @@ def set_rounds(update, context) -> None:
         else:
             try:
                 number_of_rounds: int = int(args[0])
-                game.rounds = number_of_rounds
+                game.remaining_rounds = number_of_rounds
                 utils.send_message(chatid, f"The number of rounds has been changed to {number_of_rounds}")
             except ValueError:
                 utils.send_message(chatid, "You used the command in the wrong way, use it like /set_rounds 41")

@@ -31,7 +31,8 @@ class Game:
         self.initiated_by: User = initiated_by
         self.multipack: Union[MultiPack, None] = packlist
         self.multipack_backup: Union[MultiPack, None] = packlist
-        self.rounds: int = rounds
+        self.rounds = rounds
+        self.remaining_rounds: int = rounds
         self.round: Union[Round, None] = None
         self.judge_index = 0
         self.judge: User = initiated_by
@@ -113,7 +114,7 @@ class Game:
         return string_status
 
     def new_round(self) -> bool:
-        if self.rounds == 0:
+        if self.remaining_rounds == 0:
             return False
         else:
             chosen_call: Call = self.get_random_call()
@@ -129,7 +130,7 @@ class Game:
                 user.has_answered = False
                 user.completition_answers = 0
                 self.round.reset_user_answers(user.username)
-            self.rounds -= 1
+            self.remaining_rounds -= 1
             return True
 
     def have_all_users_answered(self):
