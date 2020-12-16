@@ -1,4 +1,4 @@
 multimethod
 requests
-git+git://github.com/fuomag9/python-telegram-bot.git@dd7b1b4a099eccd13b68da4cab4ef5d541d892c3
+git+git://github.com/fuomag9/python-telegram-bot.git
 argparse
