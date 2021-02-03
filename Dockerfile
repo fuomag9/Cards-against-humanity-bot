@@ -6,4 +6,5 @@ RUN  apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install --no-ins
         python3-pip -y && pip3 install -r requirements.txt --no-cache-dir && apt-get autoremove -y && apt-get autoclean -y && rm -rf /var/lib/apt/lists/*
 COPY CahBot.py .
 COPY modules modules
+COPY packs.pickle .
 ENTRYPOINT ["python3","CahBot.py"]
