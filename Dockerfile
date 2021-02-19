@@ -7,5 +7,4 @@ RUN  apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install --no-ins
 COPY CahBot.py .
 COPY modules modules
 COPY packs.pickle .
-USER 1001
 ENTRYPOINT ["python3","CahBot.py"]
